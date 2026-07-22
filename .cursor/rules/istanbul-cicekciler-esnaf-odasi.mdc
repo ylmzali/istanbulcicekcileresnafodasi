@@ -1,0 +1,663 @@
+---
+description: İstanbul Çiçekçiler Esnaf Odası kurumsal web sitesi, üye portalı ve yönetim paneli için proje kuralları (Next.js + React)
+alwaysApply: true
+---
+
+# İstanbul Çiçekçiler Esnaf Odası Web Projesi
+
+## 1. Projenin amacı
+
+Bu proje, İstanbul Çiçekçiler Esnaf Odası'nın kurumsal web sitesini, çevrim içi üye hizmetlerini ve içerik yönetim panelini tek sistemde toplar.
+
+Sistem üç ana kullanıcı grubuna hizmet etmelidir:
+
+1. **Ziyaretçiler:** Odayı tanır, haberleri ve duyuruları takip eder, kayıtlı çiçekçi arar, mevzuat ve belgelere ulaşır.
+2. **Oda üyeleri:** Güvenli giriş yapar; üyelik bilgilerini, aidatlarını, belge taleplerini, başvurularını ve randevularını yönetir.
+3. **Oda personeli/yöneticileri:** İçerikleri, üyeleri, başvuruları, belgeleri, aidatları, randevuları ve sistem ayarlarını yetkileri kapsamında yönetir.
+
+Ana hedefler:
+
+- Kurumsal güveni artıran çağdaş bir dijital kimlik oluşturmak.
+- Üyenin odaya gelmeden başlatabileceği işlemleri artırmak.
+- Oda personelinin manuel iş yükünü ve tekrarlanan veri girişini azaltmak.
+- Haber, duyuru, mevzuat, eğitim ve etkinlikleri tek merkezden yayınlamak.
+- Kayıtlı çiçekçileri vatandaşların güvenle bulabileceği güncel bir rehber sunmak.
+- Mobil, tablet ve masaüstünde hızlı, erişilebilir ve anlaşılır bir deneyim sağlamak.
+
+## 2. Temel geliştirme yaklaşımı
+
+- Mevcut bir proje varsa kullanılan mimariyi, klasör yapısını ve kod standartlarını bozma.
+- Greenfield varsayılan teknik yapı:
+  - **Next.js (App Router) + React + TypeScript**
+  - **Node.js 20+**
+  - **MySQL 8+ veya PostgreSQL**
+  - **Prisma veya Drizzle ORM** (parametreli sorgular zorunlu; ham SQL yalnızca gerekçeli istisna)
+  - **Tailwind CSS** + CSS değişkenleriyle design token'lar
+  - **Server Components varsayılan; Client Components yalnızca etkileşim gerektiğinde**
+  - **Server Actions ve/veya Route Handlers** ile mutasyonlar
+- Katmanlar ayrılmalı: `app/` (UI + route), `components/`, `lib/`, `services/`, `repositories/` veya eşdeğer. UI içinde iş mantığı, service içinde JSX bulunmamalı.
+- Form ve API girişleri sunucu tarafında Zod (veya eşdeğer) ile doğrulanmalı. İstemci doğrulama yalnızca UX içindir.
+- Tekrarlanan arayüzler bileşen olarak çıkarılmalı.
+- Kod, değişken, tablo ve endpoint adları İngilizce; kullanıcıya gösterilen metinler Türkçe olmalı.
+- Arayüz metinleri bileşenlere dağılmamalı; merkezi i18n yapısından gelmeli (`next-intl` veya eşdeğer). Varsayılan dil `tr-TR`.
+- Saat dilimi `Europe/Istanbul`, tarih biçimi `dd.MM.yyyy`, para birimi `TRY`.
+- Para alanları veritabanında `DECIMAL`, tarihler UTC saklanıp arayüzde yerel saate çevrilmeli.
+- Tüm kritik işlemler transaction içinde yürütülmeli.
+- Silme işlemlerinde, hukuki zorunluluk yoksa soft delete tercih edilmeli.
+- Sahte veri, sahte sayaç, sahte entegrasyon sonucu veya gerçekte mevcut olmayan kurum onayı yayınlanmamalı.
+- `"use client"` yalnızca gerekli yerlerde; veri fetch mümkünse sunucuda yapılmalı.
+- Path alias (`@/`) ve tutarlı klasör sözleşmesi kullanılmalı.
+
+## 3. Ürün sınırları ve modüller
+
+### 3.1 Herkese açık kurumsal site
+
+- Ana sayfa
+- Kurumsal sayfalar
+- Yönetim ve geçmiş dönem başkanları
+- Haberler
+- Duyurular
+- Eğitimler ve etkinlikler
+- Mevzuat ve faydalı kaynaklar
+- Üyelik işlemleri bilgilendirme sayfaları
+- Kayıtlı Çiçekçi Rehberi
+- Sık Sorulan Sorular
+- İletişim
+- Bilgi Edinme formu
+- Dilek ve Şikâyet formu
+- KVKK, gizlilik ve çerez politikaları
+- Site içi arama
+- Evrak doğrulama
+
+### 3.2 Üye portalı
+
+- Giriş, şifre yenileme ve güvenlik
+- Üye profil ve işletme bilgileri
+- Üyelik durumu
+- Aidat ve ödeme geçmişi
+- Oda kayıt/faaliyet belgesi talepleri
+- Başvurular ve işlem takibi
+- Online randevu
+- Üyeye özel duyurular
+- Bildirim merkezi
+- İndirilebilir belgeler
+- Destek talepleri
+
+### 3.3 Yönetim paneli
+
+- Dashboard ve işlem özetleri
+- Kullanıcı, rol ve yetki yönetimi
+- Üye ve işletme yönetimi
+- Aidat ve tahsilat yönetimi
+- Başvuru ve belge talebi yönetimi
+- Evrak üretimi/doğrulama yönetimi
+- Randevu yönetimi
+- Haber, duyuru ve sayfa yönetimi
+- Eğitim ve etkinlik yönetimi
+- Mevzuat/dosya yönetimi
+- Çiçekçi rehberi yönetimi
+- Form başvuruları ve destek talepleri
+- Menü, footer ve site ayarları
+- SEO ve yönlendirme yönetimi
+- Denetim kayıtları ve raporlar
+
+Route grup önerisi: `(public)`, `(member)`, `(admin)`.
+
+## 4. Ana sayfa bilgi mimarisi
+
+Ana sayfa bölümleri aşağıdaki sırayı ve işlevi esas almalıdır. İçerikler yönetim panelinden düzenlenebilmelidir.
+
+### 4.1 Üst iletişim şeridi
+
+- Telefon: `0212 237 22 50`
+- E-posta: `istanbulcicekcilerodasi@gmail.com`
+- Instagram ve Facebook bağlantıları
+- Sağda `Evrak Doğrulama` kısa yolu
+- Mobilde telefon ve sosyal ikonlar sadeleştirilmeli; ana işlemler menü içinde korunmalı.
+
+### 4.2 Kurumsal başlık alanı
+
+- Odanın özgün dairesel logosu dosyadan kullanılmalı; yeniden çizilmiş veya yapay olarak değiştirilmiş logo kullanılmamalı.
+- Kurum adı: `İSTANBUL ÇİÇEKÇİLER ESNAF ODASI`
+- Alt metin: `1956'dan beri sektörümüzün yanındayız`
+- Sağ aksiyonlar: `Bilgi Edinme`, `Dilek & Şikâyet`
+
+### 4.3 Ana navigasyon
+
+- Ana Sayfa
+- Kurumsal
+- Üyelik İşlemleri
+- Mevzuat
+- Eğitimler
+- Haberler
+- İletişim
+- Arama
+- Üye Girişi
+
+Dropdown menüler klavye ile kullanılabilmeli. Aktif sayfa belirgin olmalı. Masaüstünde navigasyon scroll sırasında sticky olabilir; mobilde erişilebilir off-canvas menü kullanılmalıdır.
+
+### 4.4 Önemli duyuru şeridi
+
+- Yalnızca `is_featured = true` ve yayın aralığı aktif olan en öncelikli duyuru gösterilir.
+- Başlık, kısa açıklama ve detay bağlantısı bulunur.
+- Kapatılabilir olması halinde tercih local storage/cookie ile hatırlanır.
+- Acil durum duyurularında erişilebilir kırmızı/bordo vurgu kullanılabilir; standart duyurular yeşil görünür.
+
+### 4.5 Hero alanı
+
+- Sol bölümde üst etiket, ana başlık, kısa açıklama ve iki CTA bulunur.
+- Varsayılan içerik:
+  - Başlık: `Çiçekçilik sektörünün güçlü ve ortak sesi`
+  - Açıklama: `Mesleğimizi geliştiriyor, üyelerimizin haklarını koruyor ve sektörümüzün geleceğini birlikte büyütüyoruz.`
+  - Birincil CTA: `Üyelik İşlemleri`
+  - İkincil CTA: `Odamızı Tanıyın`
+- Sağda doğal ve profesyonel bir çiçekçi fotoğrafı bulunur.
+- Hero görseli yönetim panelinden masaüstü ve mobil için ayrı yüklenebilir; `next/image` ile sunulmalı.
+- Görsel üzerinde yalnızca yönetilebilir bir tecrübe rozeti kullanılabilir. Yıl/sayı veritabanı ayarından hesaplanmalı, görsele sabit yazılmamalıdır.
+
+### 4.6 Online Üye İşlem Merkezi
+
+Altı ana işlem kartı:
+
+1. Oda Kayıt Başvurusu
+2. Belge Talebi
+3. Aidat Sorgulama
+4. Evrak Doğrulama
+5. Online Randevu
+6. Bilgi Edinme
+
+Her kartta ikon, başlık, kısa açıklama, hedef URL ve erişim tipi bulunmalı. Giriş gerektiren işlem seçildiğinde kullanıcı girişe yönlendirilip başarılı giriş sonrası seçtiği işleme geri dönmelidir.
+
+Masaüstünde yanında kompakt üye giriş kutusu bulunabilir. Giriş formunda:
+
+- T.C. Kimlik No / Üye No
+- Şifre
+- Şifreyi göster/gizle
+- Beni hatırla
+- Şifremi unuttum
+- Giriş yap
+- Varsa ve resmî entegrasyon tamamlandıysa e-Devlet ile giriş
+
+e-Devlet butonu yalnızca gerçek entegrasyon, sözleşme ve production bilgileri mevcutsa açılmalıdır. Aksi halde arayüzde gösterilmemeli veya açıkça `Yakında` olarak işaretlenmelidir.
+
+### 4.7 Kayıtlı Çiçekçi Rehberi
+
+- Başlık: `Kayıtlı Çiçekçi Rehberi`
+- İlçe seçimi
+- İşletme adı araması
+- İsteğe bağlı hizmet/kategori filtresi
+- Liste ve harita görünümü
+- Sonuçlarda işletme adı, ilçe, açık adres, telefon, web sitesi, harita konumu ve doğrulanmış üyelik rozeti
+- Yalnızca aktif, yayına izin vermiş ve rehber görünürlüğü açık üyeler listelenir.
+- Üyenin kişisel verileri veya kurum içi bilgileri asla gösterilmez.
+- Harita sağlayıcısı yapılandırılabilir olmalı; API anahtarı kaynak koda yazılmamalıdır.
+- Konumlar kümelenmeli, sayfalama veya alan bazlı yükleme kullanılmalıdır.
+- Sonuç bulunamazsa anlaşılır boş durum gösterilmelidir.
+
+### 4.8 Güncel Haberler ve Duyurular
+
+- Sekmeler: Tümü, Duyurular, Oda Haberleri, Sektörden
+- Bir öne çıkan haber ve yanında son üç içerik
+- Tarih, kategori, görsel, başlık, kısa özet ve detay bağlantısı
+- Yönetim panelindeki `featured`, `published_at`, `expires_at`, `status` alanlarıyla yönetilir.
+- Tarihi geçen fakat arşiv değeri bulunan içerik detay sayfasında kalabilir; ana sayfadan otomatik kalkar.
+
+### 4.9 Eğitimler ve Etkinlikler
+
+- Yaklaşan üç etkinlik gösterilir.
+- Tarih bloğu, etkinlik adı, türü, konum/online bilgisi, saat, kapasite ve kayıt durumu bulunur.
+- `Etkinlik Takvimi` bağlantısı tam listeye gider.
+- Kontenjanlı etkinliklerde aynı üye için mükerrer kayıt engellenir.
+- Kayıt açılış/kapanış tarihleri ve bekleme listesi desteklenir.
+
+### 4.10 Mevzuat ve Faydalı Kaynaklar
+
+- 5362 Sayılı Esnaf ve Sanatkârlar Kanunu
+- Güncel yönetmelikler
+- Üyelik başvuru formları
+- Fiyat tarifeleri
+- İndirilebilir belgeler
+
+Dosya adı, türü, boyutu, yayın tarihi ve sürüm bilgisi gösterilmelidir. Dosyalar doğrudan tahmin edilebilir özel klasör URL'leriyle sunulmamalı; yetki gerekiyorsa kontrollü indirme route'u kullanılmalıdır.
+
+### 4.11 Kurumsal istatistikler
+
+- Kuruluş yılı/tecrübe
+- Aktif üye sayısı
+- Hizmet verilen ilçe sayısı
+- Mesleki dayanışma veya tamamlanan işlem göstergesi
+
+Tüm sayılar gerçek veriden veya yönetilebilir doğrulanmış ayarlardan gelmelidir. Sahte `1.000+` gibi pazarlama sayıları kod içine gömülmemelidir.
+
+### 4.12 Kurumsal tanıtım
+
+- Başlık: `Sektörümüz için birlikte çalışıyoruz`
+- Kısa kurum açıklaması
+- Üyelerin hak ve menfaatlerinin korunması
+- Mesleki eğitim ve gelişim programları
+- Kamu kurumlarıyla iş birliği
+- `Odamız Hakkında` bağlantısı
+- Yönetilebilir görsel veya video kapağı
+
+### 4.13 Sık Sorulan Sorular
+
+- Kategori destekli accordion yapı
+- Arama motorlarının okuyabileceği semantik HTML
+- Uygunsa `FAQPage` JSON-LD
+- Varsayılan sorular:
+  - Üyelik başvurusu nasıl yapılır?
+  - Oda kayıt belgesi nasıl alınır?
+  - Aidat ödemesini nasıl yapabilirim?
+  - Randevu almadan işlem yapabilir miyim?
+
+### 4.14 Destek ve üyelik çağrısı
+
+- `Aradığınız cevabı bulamadınız mı?` destek kartı
+- Telefon ve iletişim formu bağlantısı
+- Son CTA: `Siz de aramıza katılın, sektörümüzü birlikte büyütelim.`
+- Butonlar: `Üyelik Başvurusu Yap`, `Üyelik Koşullarını İncele`
+
+### 4.15 Footer
+
+- Logo ve kısa kurum açıklaması
+- Hızlı bağlantılar
+- Üye hizmetleri
+- İletişim bilgileri
+- Sosyal medya
+- Üst kurumlar/iş birlikleri logoları
+- KVKK, Gizlilik Politikası, Çerez Politikası
+- Dinamik telif yılı
+- Adres: `Tarlabaşı Bulvarı No: 232 K: 1 Beyoğlu / İstanbul`
+
+Üst kuruluş logoları yalnızca yetkili orijinal dosyalarla ve doğru bağlantılarla gösterilmelidir.
+
+## 5. Kurumsal içerik sayfaları
+
+### 5.1 Kurumsal
+
+- Oda hakkında
+- Başkanın mesajı
+- Yönetim kurulu
+- Denetim kurulu
+- Organizasyon şeması
+- Misyon, vizyon ve değerler
+- Geçmiş dönem başkanları
+- Üst kuruluşlarımız
+- Faaliyet raporları
+- Stratejik planlar
+
+### 5.2 Haber ve duyuru detayları
+
+- SEO uyumlu slug
+- Breadcrumb
+- Başlık, kategori, yayın tarihi, kapak görseli ve zengin içerik
+- Ek dosyalar
+- Sosyal paylaşım
+- Yazdırma
+- İlgili içerikler
+- Önceki/sonraki içerik
+- Süresi geçen kritik duyurularda arşiv uyarısı
+- `generateMetadata` ve uygun JSON-LD
+
+### 5.3 Eğitim ve etkinlik detayları
+
+- Açıklama, eğitmen, tarih, saat, yer/online bağlantı, kapasite
+- Kayıt şartları
+- Üye/ziyaretçi kayıt türü
+- Kayıt ve iptal akışı
+- Takvime ekleme (`.ics`)
+- Katılımcıya onay ve hatırlatma bildirimi
+- Tamamlanan etkinlikte materyal ve varsa katılım belgesi
+
+### 5.4 İletişim
+
+- Adres, telefon, e-posta, KEP ve çalışma saatleri
+- Harita
+- Birimlere göre iletişim
+- Erişilebilir iletişim formu
+- Açık rıza ve KVKK bilgilendirmesi
+- Spam koruması ve rate limit
+
+## 6. Üyelik ve kimlik doğrulama
+
+### 6.1 Üye durumları
+
+`pending`, `active`, `suspended`, `passive`, `cancelled`, `deceased`
+
+Durum adları kullanıcıya Türkçe gösterilmelidir. Durum değişiklikleri neden, tarih ve işlemi yapan personelle kaydedilmelidir.
+
+### 6.2 Kimlik doğrulama
+
+- Auth.js (NextAuth) veya eşdeğer güvenli oturum çözümü kullanılmalı.
+- Parolalar Argon2id veya bcrypt ile hashlenmeli.
+- Oturum kimliği girişte yenilenmeli.
+- Brute-force koruması ve kademeli rate limit uygulanmalı.
+- Başarısız girişler denetim kaydına yazılmalı.
+- Şifre sıfırlama token'ı tek kullanımlık, hashlenmiş ve süreli olmalı.
+- Yönetici hesaplarında 2FA zorunlu; üyelerde isteğe bağlı desteklenmeli.
+- Hassas işlem öncesi yeniden kimlik doğrulama istenebilir.
+- `callbackUrl` / `return_url` yalnızca uygulama içindeki izinli adreslere yönlenmelidir.
+- Middleware ile `(member)` ve `(admin)` koruması yapılmalı; yetki kontrolü yalnızca UI gizleme ile sınırlı olmamalıdır.
+
+### 6.3 Roller
+
+- `super_admin`
+- `content_manager`
+- `member_services`
+- `accounting`
+- `appointment_officer`
+- `support_officer`
+- `auditor`
+- `member`
+
+Her yetki `module.action` biçiminde tanımlanmalı: `members.view`, `members.update`, `dues.collect`, `documents.approve`, `content.publish` gibi. Server Action / Route Handler / service katmanında zorunlu kontrol yapılmalıdır.
+
+## 7. Temel iş akışları
+
+### 7.1 Oda kayıt başvurusu
+
+1. Başvuru sahibi koşulları ve gerekli belgeleri görür.
+2. Kimlik/iletişim ve işletme bilgilerini girer.
+3. Gerekli belgeleri yükler.
+4. Açık rıza ve doğruluk beyanını onaylar.
+5. Taslak kaydedebilir.
+6. Başvuruyu gönderir ve takip numarası alır.
+7. Personel eksik belge isteyebilir.
+8. Başvuru sahibi eksikleri tamamlar.
+9. Personel başvuruyu onaylar veya gerekçeli reddeder.
+10. Tüm durum değişiklikleri zaman çizelgesinde görüntülenir.
+
+Başvuru durumları: `draft`, `submitted`, `under_review`, `missing_documents`, `approved`, `rejected`, `cancelled`
+
+### 7.2 Belge talebi
+
+- Belge türü seçilir; kullanım amacı ve teslim yöntemi belirlenir; varsa ücret gösterilir.
+- Personel inceler/onaylar; sistem benzersiz belge numarası ve doğrulama kodu/QR üretir.
+- İmzalı belge hazırsa üyeye bildirim gider; üye PDF'yi indirir veya fiziki teslim seçeneğini görür.
+- Durumlar: `draft`, `submitted`, `payment_pending`, `under_review`, `approved`, `ready`, `delivered`, `rejected`, `cancelled`
+- Üretilen PDF gerçek elektronik imza altyapısı yoksa `elektronik imzalıdır` şeklinde sunulmamalıdır.
+
+### 7.3 Evrak doğrulama
+
+- Belge numarası ve doğrulama kodu veya QR ile sorgu yapılır.
+- Sonuçta yalnızca belge türü, düzenlenme tarihi, geçerlilik durumu ve maskelenmiş kurum/işletme bilgisi gösterilir.
+- PDF'nin tamamı veya kişisel veri anonim ziyaretçiye açılmaz.
+- Rate limit ve bot koruması uygulanır.
+- Doğrulama sonucu: `valid`, `expired`, `revoked`, `not_found`.
+
+### 7.4 Aidat sorgulama ve ödeme
+
+- Dönem bazında tahakkuk, son ödeme tarihi, gecikme, ödenen ve kalan tutar gösterilir.
+- Tahsilat makbuzları indirilebilir.
+- Muhasebe personeli manuel tahsilat ekleyebilir; kayıt silinemez, ters işlemle düzeltilir.
+- Online ödeme yalnızca gerçek ödeme kuruluşu entegrasyonu tamamlandığında açılır.
+- Kart bilgisi uygulama sunucusunda tutulmaz.
+- Webhook imzası doğrulanır ve idempotency uygulanır.
+- Ödeme durumları: `pending`, `processing`, `paid`, `failed`, `cancelled`, `refunded`, `partially_refunded`.
+
+### 7.5 Online randevu
+
+- İşlem türü, birim, gün ve uygun saat seçilir.
+- Kapalı günler, tatiller, personel çalışma saatleri ve slot kapasitesi dikkate alınır.
+- Aynı slotun çift rezervasyonu transaction/unique constraint ile engellenir.
+- Randevu kodu üretilir; e-posta/SMS bildirim altyapısı desteklenir.
+- İptal süresi yönetim panelinden belirlenir.
+- Durumlar: `pending`, `confirmed`, `completed`, `cancelled_by_member`, `cancelled_by_staff`, `no_show`.
+
+### 7.6 Bilgi edinme, dilek ve şikâyet
+
+- Başvuru türü, konu, açıklama, iletişim tercihi ve ek dosya desteklenir.
+- Kullanıcıya takip numarası verilir; talep ilgili birime atanır.
+- İç not ile kullanıcıya açık cevap birbirinden ayrılır.
+- SLA/hedef cevap tarihi hesaplanabilir.
+- Durumlar: `new`, `assigned`, `in_progress`, `waiting_for_applicant`, `resolved`, `closed`.
+
+## 8. Yönetim paneli ayrıntıları
+
+### 8.1 Dashboard
+
+- Bekleyen üyelik başvuruları, eksik belgeli başvurular, onay bekleyen belge talepleri
+- Bugünkü randevular, açık destek/bilgi edinme kayıtları, vadesi geçen aidatlar
+- Son içerik hareketleri ve yetkiye göre kişiselleştirilmiş hızlı işlemler
+- Kartlar gerçek sorgulardan gelmeli; yalnızca ilgili role gösterilmelidir.
+
+### 8.2 İçerik yönetimi
+
+- Sayfa, haber, duyuru, etkinlik, SSS ve dosya yönetimi
+- Taslak, incelemede, planlandı, yayında, arşiv durumları
+- Zamanlanmış yayın, revizyon geçmişi, önizleme
+- SEO başlık/açıklama, slug, canonical, OG görseli
+- Görsel alt metni ve odak noktası
+- Güvenli rich text editörü ve HTML sanitization
+
+### 8.3 Üye yönetimi
+
+- Gelişmiş arama/filtreleme, profil özeti, işletme/şube, üyelik/aidat/başvuru geçmişi
+- İletişim tercihleri, rehberde yayın izni, iç notlar
+- Hassas alanlara erişimde yetki ve audit log
+
+### 8.4 Raporlama
+
+- Üye durum, ilçe dağılımı, aidat tahakkuk/tahsilat, belge/başvuru süreleri
+- Randevu doluluk ve no-show, eğitim katılımı, içerik görüntülenme
+- CSV/XLSX/PDF dışa aktarma; büyük export'lar queue üzerinden
+
+## 9. Veri modeli
+
+Alanlar projenin migration/schema standardına göre genişletilebilir. En az şu entity'ler planlanmalıdır:
+
+### 9.1 Kimlik ve yetki
+
+`users`, `roles`, `permissions`, `user_roles`, `role_permissions`, oturum deposu, `password_reset_tokens`
+
+### 9.2 Üye ve işletme
+
+`members`, `member_profiles`, `businesses`, `business_branches`, `districts`, `business_categories` (+ pivot), `member_status_history`
+
+Hassas alanlar: `identity_no_encrypted`, `tax_no_encrypted`, `directory_consent`, `directory_visible`
+
+### 9.3 Başvuru ve belge
+
+`membership_applications`, `application_documents`, `document_types`, `document_requests`, `issued_documents`, status history tabloları
+
+### 9.4 Aidat ve ödeme
+
+`dues_periods`, `member_dues`, `payments`, `payment_allocations`, `receipts`, `payment_webhook_events`
+
+### 9.5 Randevu ve destek
+
+`appointment_services`, `appointment_locations`, `appointment_schedules`, `appointments`, `closed_days`, `support_requests`, `support_messages`
+
+### 9.6 İçerik
+
+`pages`, `posts` (`news` | `announcement` | `sector`), kategoriler, `events`, `event_registrations`, `event_materials`, `faqs`, `faq_categories`, `resources`, `media`, `menus`, `menu_items`, `banners`, `site_settings`, `redirects`, `contact_submissions`, açık rızalı `newsletter_subscribers`
+
+### 9.7 Sistem
+
+`notifications`, `notification_templates`, `audit_logs`, queue/job tabloları veya eşdeğer altyapı, `feature_flags`
+
+Foreign key, indeks ve unique constraint'ler schema içinde açıkça tanımlanmalıdır. `slug`, `member_no`, `tracking_no`, `document_no`, `status`, `published_at`, `district_id` indekslenmelidir.
+
+## 10. API, route ve veri erişimi
+
+- Public SEO URL'leri Türkçe olabilir: `/haberler`, `/duyurular`, `/egitimler`, `/kayitli-cicekciler`.
+- App Router route grupları ve tutarlı REST/RPC yaklaşımı kullanılmalı.
+- Örnek API yüzeyleri:
+  - `GET /api/public/posts`
+  - `GET /api/public/events`
+  - `GET /api/public/florists`
+  - `POST /api/public/document-verification`
+  - `POST /api/public/contact-requests`
+  - `GET /api/member/profile`
+  - `GET /api/member/dues`
+  - `POST /api/member/document-requests`
+  - `POST /api/member/appointments`
+  - `GET /api/member/notifications`
+- Tercihen Server Actions ile form mutasyonları; harici istemci veya webhook için Route Handlers.
+- Liste endpoint'leri pagination, filtre ve kontrollü sıralama desteklemelidir.
+- API cevap formatı tutarlı olmalı: `success`, `message`, `data`, `errors`, `meta`.
+- CSRF/origin koruması, authentication ve authorization her yüzey tipine uygun uygulanmalıdır.
+- Hassas alanlar gereksiz yere dönmemelidir.
+- Rate limit; login, şifre sıfırlama, evrak doğrulama, iletişim ve arama yüzeylerinde zorunludur.
+- Public içerikte uygun `revalidate` / cache stratejisi; yayın sonrası tag/path invalidation.
+
+## 11. Tasarım sistemi
+
+### 11.1 Görsel dil
+
+- Kurumsal, sakin, güven veren ve çağdaş.
+- E-ticaret görünümünden kaçın; ürün fiyatı, sepet veya satış kartı kullanılmaz.
+- Beyaz ve sıcak kırık beyaz yüzeyler; koyu orman yeşili ana renk; açık adaçayı destek rengi; logodan gelen bordo/kırmızı yalnızca vurgu için.
+- Renk token'ları:
+  - `--color-primary-900: #0B3D28`
+  - `--color-primary-800: #0E4A30`
+  - `--color-primary-700: #0E5A39`
+  - `--color-primary-100: #E8F1EC`
+  - `--color-surface: #FFFFFF`
+  - `--color-surface-soft: #F7F8F5`
+  - `--color-text: #17231D`
+  - `--color-text-muted: #637068`
+  - `--color-border: #DCE4DF`
+  - `--color-accent: #A83B42`
+- Font: `Inter`, yedek `system-ui, -apple-system, Segoe UI, sans-serif` (`next/font` ile yükle).
+- 12 kolonlu grid ve maksimum içerik genişliği yaklaşık 1280px.
+- Kart radius 16–20px; buton radius 8–10px; aşırı yuvarlak/pill görünüm yalnızca etiketlerde.
+- Gölge düşük kontrastlı ve ölçülü olmalı.
+- Dekoratif çiçek çizimleri yalnızca CTA/footer gibi sınırlı alanlarda kullanılabilir.
+
+### 11.2 Bileşenler
+
+Button, form field, select, textarea, date/time picker, status badge, service/news/event/document kartları, stat item, alert/banner, modal/drawer, accordion, pagination, breadcrumb, tabs, toast, empty/loading/error/success, skeleton, confirm dialog, data table ve mobil card listesi.
+
+Tüm bileşenlerde hover, focus, active, disabled, loading ve validation durumları tanımlanmalıdır.
+
+### 11.3 Responsive davranış
+
+- `>=1200px`: geniş masaüstü
+- `992–1199px`: daha sıkı grid
+- `768–991px`: tablet; gerektiğinde tek kolon
+- `<768px`: mobil; off-canvas menü, büyük dokunma hedefleri
+- `<576px`: form ve aksiyonlar tam genişlik; harita/liste sekmeli olabilir
+- Mobilde yatay taşma olmamalı; tablolar kart veya kontrollü yatay kaydırmaya dönüşmeli
+- Sticky alanlar mobil ekranı kaplamamalı
+
+## 12. Erişilebilirlik
+
+- En az WCAG 2.1 AA.
+- Semantik HTML; görünür label; belirgin klavye odağı.
+- Dropdown, modal, accordion ve tabs ARIA uyumlu olmalı.
+- Renk tek başına durum anlatmamalı; kontrast en az 4.5:1.
+- Dokunma hedefleri en az 44x44px.
+- Anlamlı alt metin; hata mesajları alanla ilişkilendirilmeli.
+- `prefers-reduced-motion` desteklenmeli.
+
+## 13. SEO ve içerik kalitesi
+
+- Her sayfada benzersiz `title` ve `meta description` (`generateMetadata`).
+- Canonical, Open Graph, Twitter Card.
+- `Organization`, `BreadcrumbList`, `Article`, `Event`, `FAQPage`, uygunsa `LocalBusiness` JSON-LD.
+- `app/sitemap.ts`, `app/robots.ts`.
+- Haber/duyuru/etkinlik sitemap'e otomatik eklenmeli.
+- Slug değişince 301 redirect kaydı oluşturulmalı (`next.config` redirects + DB `redirects` tablosu).
+- Tek H1; görseller WebP/AVIF ve `next/image` `sizes`/`srcset` ile.
+- Türkçe yazım ve karakterler eksiksiz kullanılmalıdır.
+- Public liste/detay sayfalarında gereksiz client-only render kullanılmamalı.
+
+## 14. Güvenlik ve KVKK
+
+- OWASP temel kontrolleri.
+- XSS için escaping + rich text sanitization.
+- SQL injection'a karşı ORM/parametreli sorgular.
+- Dosya yüklemelerinde MIME doğrulama, uzantı beyaz listesi, boyut sınırı.
+- Özel belgeler private storage'da; indirme süreli/yetkili route ile.
+- T.C. Kimlik No, vergi no vb. uygulama seviyesinde şifrelenmeli; loglara yazılmamalı.
+- Production'da stack trace kullanıcıya gösterilmemeli.
+- Güvenlik başlıkları: CSP, HSTS, X-Content-Type-Options, Referrer-Policy, frame-ancestors.
+- Cookie'ler `HttpOnly`, `Secure`, uygun `SameSite`.
+- Zorunlu çerezler ile analitik/pazarlama çerezleri ayrılmalı.
+- KVKK aydınlatma/açık rıza metinleri versiyonlanmalı; onay zamanı ve sürüm kaydedilmeli.
+- Yönetici görüntüleme/değişiklikleri audit log'a yazılmalıdır.
+
+## 15. Bildirimler
+
+- Uygulama içi, e-posta ve isteğe bağlı SMS.
+- Yönetilebilir şablonlar; güvenli değişkenler.
+- Olaylar: başvuru alındı, eksik belge, belge hazır, randevu CRUD, ödeme, destek yanıtı, etkinlik hatırlatması.
+- Idempotency anahtarı; pazarlama ile işlemsel bildirim ayrımı.
+
+## 16. Performans ve operasyon
+
+- Ana sayfa: hızlı LCP, düşük CLS, minimum client JS.
+- Hero hariç below-the-fold görseller lazy-load.
+- Kullanılmayan bağımlılık eklenmemeli.
+- Public içerik cache + yayın sonrası invalidation.
+- Ağır e-posta, SMS, rapor ve PDF işleri queue ile (BullMQ veya eşdeğer).
+- Ortamlar: local, staging, production. Secret'lar `.env`; commit edilmez.
+- Sağlık kontrol endpoint'i hassas bilgi sızdırmamalı.
+
+## 17. Test standartları
+
+- Unit: services, hesaplamalar, durum geçişleri (Vitest/Jest).
+- Integration: repository/DB, dosya, bildirim, ödeme webhook.
+- Feature/E2E: login, başvuru, belge, aidat, randevu, içerik yayınlama (Playwright).
+- Authorization: rol bazlı izin/yasak.
+- Validation: zorunlu alan, format, dosya, kötü amaçlı giriş.
+- Concurrency: aynı randevu slotu, aynı webhook, aynı belge numarası.
+- Accessibility smoke; responsive: 1440, 1200, 992, 768, 390, 360.
+- SEO: canonical, sitemap, structured data, status/redirect.
+
+Hata düzeltmesinde mümkünse önce regressing test eklenmelidir.
+
+## 18. Kod üretirken Cursor'un uyması gereken kurallar
+
+- Özelliğe başlamadan mevcut `app/`, component, service, schema ve stil yapısını incele.
+- Aynı iş için ikinci bir paralel mimari kurma.
+- Mevcut kullanıcı değişikliklerini ve ilgisiz dosyaları bozma.
+- Gereksiz bağımlılık ekleme; eklenen her paketin amacını açıkla.
+- Büyük özelliği page/action içine yığma; service/repository katmanına ayır.
+- N+1 sorguları önle; doğru select/include, indeks ve pagination kullan.
+- Her mutasyonda validation, authorization, transaction ve audit ihtiyacını kontrol et.
+- Form gönderiminde çift submit / mükerrer kayıt riskini engelle.
+- Kullanıcıya teknik hata gösterme; anlaşılır Türkçe mesaj ver.
+- Boş, loading, hata, yetkisiz ve başarı durumlarını birlikte tasarla.
+- Yönetilebilir içerikleri CMS/ayar tablosundan getir; görsele sabit metin gömme.
+- Gerçek olmayan entegrasyonları çalışıyormuş gibi kodlama; `feature_flags` + adapter/interface kullan.
+- Logo ve resmî kurum işaretlerini placeholder ile değiştirme.
+- Seed verileri açıkça işaretle; production'da otomatik yükleme.
+- Server/Client sınırını bilinçli tut; secret'ları client bundle'a taşıma.
+- Bittikten sonra typecheck/lint, migration/schema kontrolü ve ilgili testleri çalıştır.
+- Değiştirilen dosyaları ve doğrulama sonucunu kısa raporla.
+
+## 19. Uygulama sırası
+
+1. Next.js temeli, ortam, design token'lar, ortak layout ve i18n
+2. Public ana sayfa ve statik kurumsal sayfalar
+3. CMS, medya, menü, haber, duyuru, SSS ve etkinlik yönetimi
+4. Auth, rol ve yetki sistemi
+5. Üye/işletme yönetimi ve Kayıtlı Çiçekçi Rehberi
+6. Üyelik başvurusu ve belge yükleme
+7. Belge talebi, PDF ve evrak doğrulama
+8. Aidat/tahsilat; ödeme entegrasyonu sonradan adapter ile
+9. Randevu ve destek modülleri
+10. Bildirimler, raporlar ve denetim kayıtları
+11. SEO, erişilebilirlik, performans ve güvenlik sertleştirmesi
+12. Staging kabul testleri ve production hazırlığı
+
+Her faz kendi schema/migration, yetki, arayüz, test ve kabul kriterleriyle tamamlanmalıdır.
+
+## 20. Minimum kabul kriterleri
+
+- Ana sayfadaki tüm bölümler yönetilebilir gerçek veriden besleniyor.
+- Site mobil, tablet ve masaüstünde yatay taşma olmadan çalışıyor.
+- Public site, üye portalı ve yönetim paneli yetki bakımından ayrılmış.
+- Üyelik başvurusu takip numarasıyla uçtan uca izlenebiliyor.
+- Belge talebi durum geçmişiyle yönetiliyor ve doğrulanabilir belge üretebiliyor.
+- Aidat tahakkukları ve tahsilatları değiştirilemez hareket geçmişiyle kayıtlı.
+- Randevularda çift rezervasyon engelleniyor.
+- Kayıtlı Çiçekçi Rehberi yalnızca izinli ve aktif üyeleri gösteriyor.
+- İçerikler taslak, zamanlama, yayın ve arşiv akışına sahip.
+- Kritik yönetici işlemleri audit log'da tutuluyor.
+- Giriş, formlar, dosya yükleme ve public doğrulama yüzeyleri güvenlik testlerinden geçiyor.
+- Arayüz WCAG 2.1 AA temel kriterlerini sağlıyor.
+- Temel SEO (`generateMetadata`, sitemap, schema, OG) tamamlanmış.
+- Otomatik testler kritik akışları kapsıyor ve staging'de başarılı çalışıyor.
