@@ -1,0 +1,37 @@
+---
+description: URL slug ve medya dosya adı adlandırma kuralları (ASCII kebab-case)
+alwaysApply: true
+---
+
+# Slug ve dosya adı kuralları
+
+Tüm URL slug'ları, path segment'leri ve görsel/medya dosya adları için:
+
+## Zorunlu format
+
+- Yalnızca `a-z`, `0-9` ve tire `-`
+- Küçük harf
+- Kelimeler tire ile ayrılır (kebab-case)
+- Boşluk, Türkçe karakter (`çğıöşüÇĞİÖŞÜ`), noktalama, alt çizgi `_` **yok**
+
+## Araçlar
+
+- Metin → slug: `slugify()` from `@/lib/slug`
+- Yüklenen dosya adı: `slugifyAssetFilename()`
+- Doğrulama: `slugSchema`, `assetFilenameSchema`, `isValidSlug`, `isValidAssetFilename`
+
+## Örnekler
+
+| Girdi | Çıktı |
+| --- | --- |
+| `70 Yıllık Tecrübe` | `70-yillik-tecrube` |
+| `Oda Kayıt Belgesi!` | `oda-kayit-belgesi` |
+| `Hero Rozeti (Yeni).PNG` | `hero-rozeti-yeni.png` |
+
+## Uygulama
+
+- CMS/içerik kaydında slug boşsa başlıktan `slugify` ile üret; doluysa şemayla doğrula.
+- Medya upload: orijinal adı saklama; disk/object key her zaman slugify edilmiş ad.
+- Statik `public/images` dosyaları da aynı kurala uyar (`hero-experience-badge.png`).
+- Uygulama içi path'ler `@/lib/routes` üzerinden tanımlanır; login dönüşü için `?return=aidat` gibi kısa ASCII anahtarlar kullanılır (`callbackUrl=%2F...` yok).
+- Kullanıcıya görünen başlık/alt metin Türkçe kalır; yalnızca URL ve dosya adı ASCII olur.

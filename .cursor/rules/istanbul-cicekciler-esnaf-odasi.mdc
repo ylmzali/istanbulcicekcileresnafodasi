@@ -39,6 +39,7 @@ Ana hedefler:
 - Form ve API girişleri sunucu tarafında Zod (veya eşdeğer) ile doğrulanmalı. İstemci doğrulama yalnızca UX içindir.
 - Tekrarlanan arayüzler bileşen olarak çıkarılmalı.
 - Kod, değişken, tablo ve endpoint adları İngilizce; kullanıcıya gösterilen metinler Türkçe olmalı.
+- **Slug ve dosya adı kuralı (tüm sistem):** URL slug'ları, route segment'leri ve `public/` / medya dosya adları yalnızca `a-z`, `0-9` ve ayırıcı tire (`-`) kullanır. Boşluk, Türkçe karakter (`çğıöşü` vb.), noktalama ve alt çizgi yok. Üretim için `slugify` / `slugifyAssetFilename` (`src/lib/slug.ts`) zorunlu; kayıttan önce `slugSchema` / `assetFilenameSchema` ile doğrula. Başlık ve alt metin Türkçe kalabilir.
 - Arayüz metinleri bileşenlere dağılmamalı; merkezi i18n yapısından gelmeli (`next-intl` veya eşdeğer). Varsayılan dil `tr-TR`.
 - Saat dilimi `Europe/Istanbul`, tarih biçimi `dd.MM.yyyy`, para birimi `TRY`.
 - Para alanları veritabanında `DECIMAL`, tarihler UTC saklanıp arayüzde yerel saate çevrilmeli.
@@ -480,7 +481,7 @@ Foreign key, indeks ve unique constraint'ler schema içinde açıkça tanımlanm
 
 ## 10. API, route ve veri erişimi
 
-- Public SEO URL'leri Türkçe olabilir: `/haberler`, `/duyurular`, `/egitimler`, `/kayitli-cicekciler`.
+- Public SEO path'leri Türkçe etikete karşılık gelen ASCII slug kullanır: `/haberler`, `/duyurular`, `/egitimler`, `/kayitli-cicekciler` (Türkçe karakter yok).
 - App Router route grupları ve tutarlı REST/RPC yaklaşımı kullanılmalı.
 - Örnek API yüzeyleri:
   - `GET /api/public/posts`
@@ -558,9 +559,11 @@ Tüm bileşenlerde hover, focus, active, disabled, loading ve validation durumla
 - `Organization`, `BreadcrumbList`, `Article`, `Event`, `FAQPage`, uygunsa `LocalBusiness` JSON-LD.
 - `app/sitemap.ts`, `app/robots.ts`.
 - Haber/duyuru/etkinlik sitemap'e otomatik eklenmeli.
+- **Slug standardı:** `slugify(başlık)` → küçük harf kebab-case ASCII (`oda-kayit-belgesi`). Geçersiz: boşluk, `Çiçekçi`, `tecrube!`, `hero_badge`, `dosya adı.png`. Geçerli: `cicekci`, `hero-experience-badge.png`.
 - Slug değişince 301 redirect kaydı oluşturulmalı (`next.config` redirects + DB `redirects` tablosu).
+- Medya yüklemede orijinal dosya adı asla olduğu gibi kullanılmaz; `slugifyAssetFilename` ile saklanır.
 - Tek H1; görseller WebP/AVIF ve `next/image` `sizes`/`srcset` ile.
-- Türkçe yazım ve karakterler eksiksiz kullanılmalıdır.
+- Türkçe yazım ve karakterler **görünen metinde** eksiksiz kullanılmalıdır (slug/dosya adında değil).
 - Public liste/detay sayfalarında gereksiz client-only render kullanılmamalı.
 
 ## 14. Güvenlik ve KVKK
@@ -621,6 +624,7 @@ Hata düzeltmesinde mümkünse önce regressing test eklenmelidir.
 - Kullanıcıya teknik hata gösterme; anlaşılır Türkçe mesaj ver.
 - Boş, loading, hata, yetkisiz ve başarı durumlarını birlikte tasarla.
 - Yönetilebilir içerikleri CMS/ayar tablosundan getir; görsele sabit metin gömme.
+- Yeni içerik, medya veya route eklerken slug/dosya adını `src/lib/slug.ts` ile üret; ham kullanıcı metnini URL veya dosya adı yapma.
 - Gerçek olmayan entegrasyonları çalışıyormuş gibi kodlama; `feature_flags` + adapter/interface kullan.
 - Logo ve resmî kurum işaretlerini placeholder ile değiştirme.
 - Seed verileri açıkça işaretle; production'da otomatik yükleme.

@@ -1,26 +1,61 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-primary-900: #0b3d28;
+  --color-primary-800: #0e4a30;
+  --color-primary-700: #0e5a39;
+  --color-primary-100: #e8f1ec;
+  --color-surface: #ffffff;
+  --color-surface-soft: #f7f8f5;
+  --color-text: #17231d;
+  --color-text-muted: #637068;
+  --color-border: #dce4df;
+  --color-accent: #a83b42;
+  --background: var(--color-surface);
+  --foreground: var(--color-text);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-inter);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), system-ui, -apple-system, "Segoe UI",
+    sans-serif;
+}
+
+a {
+  text-underline-offset: 3px;
+}
+
+@keyframes hero-slide-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-primary-700) 22%, white);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+summary::-webkit-details-marker {
+  display: none;
 }
