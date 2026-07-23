@@ -9,6 +9,7 @@ export const routes = {
     root: "/kurumsal",
     presidentMessage: "/kurumsal/baskanin-mesaji",
     board: "/kurumsal/yonetim-kurulu",
+    auditBoard: "/kurumsal/denetim-kurulu",
     pastPresidents: "/kurumsal/gecmis-donem-baskanlari",
   },
   membership: {
@@ -44,6 +45,23 @@ export const routes = {
   },
   admin: {
     root: "/yonetim",
+    login: "/yonetim/giris",
+    posts: "/yonetim/icerik",
+    postNew: "/yonetim/icerik/yeni",
+    postEdit: (id: string) => `/yonetim/icerik/${id}`,
+    events: "/yonetim/etkinlikler",
+    eventNew: "/yonetim/etkinlikler/yeni",
+    eventEdit: (id: string) => `/yonetim/etkinlikler/${id}`,
+    faqs: "/yonetim/sss",
+    faqNew: "/yonetim/sss/yeni",
+    faqEdit: (id: string) => `/yonetim/sss/${id}`,
+    members: "/yonetim/uyeler",
+    applications: "/yonetim/basvurular",
+    documentRequests: "/yonetim/belge-talepleri",
+    dues: "/yonetim/aidat",
+    appointments: "/yonetim/randevular",
+    support: "/yonetim/destek",
+    florists: "/yonetim/rehber",
   },
 } as const;
 
@@ -78,6 +96,10 @@ export function memberLoginHref(returnKey?: MemberLoginReturnKey) {
 export const publicSitemapPaths = [
   routes.home,
   routes.corporate.root,
+  routes.corporate.presidentMessage,
+  routes.corporate.board,
+  routes.corporate.auditBoard,
+  routes.corporate.pastPresidents,
   routes.membership.root,
   routes.legislation,
   routes.trainings,

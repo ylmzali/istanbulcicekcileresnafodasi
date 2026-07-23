@@ -8,6 +8,7 @@ export default function NewsPage() {
     <PagePlaceholder
       title="Haberler"
       description="Oda haberleri ve duyurular yayın akışına alındığında burada görünecektir."
+      breadcrumbs={[{ label: "Haberler" }]}
     />
   );
 }

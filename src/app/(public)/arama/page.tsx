@@ -8,6 +8,7 @@ export default function SearchPage() {
     <PagePlaceholder
       title="Site İçi Arama"
       description="Arama altyapısı içerik yönetimiyle birlikte tamamlanacaktır."
+      breadcrumbs={[{ label: "Arama" }]}
     />
   );
 }

@@ -4,11 +4,20 @@ const nextConfig: NextConfig = {
   images: {
     localPatterns: [
       {
-        // Omitting `search` allows any query string (e.g. ?v=...) for cache busting
         pathname: "/images/**",
+      },
+      {
+        pathname: "/uploads/**",
       },
     ],
   },
+  serverExternalPackages: [
+    "@prisma/client",
+    "@prisma/adapter-mariadb",
+    "mariadb",
+    "bcryptjs",
+    "sharp",
+  ],
 };
 
 export default nextConfig;

@@ -8,6 +8,7 @@ export default function DirectoryPage() {
     <PagePlaceholder
       title="Kayıtlı Çiçekçi Rehberi"
       description="Yalnızca aktif, onaylı ve rehber yayın izni vermiş üyeler listelenecektir."
+      breadcrumbs={[{ label: "Kayıtlı Çiçekçi Rehberi" }]}
     />
   );
 }

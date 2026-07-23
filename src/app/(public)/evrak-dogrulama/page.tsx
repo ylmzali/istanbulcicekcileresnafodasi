@@ -8,6 +8,7 @@ export default function DocumentVerificationPage() {
     <PagePlaceholder
       title="Evrak Doğrulama"
       description="Belge numarası ve doğrulama kodu ile sorgulama sonraki fazda eklenecektir."
+      breadcrumbs={[{ label: "Evrak Doğrulama" }]}
     />
   );
 }

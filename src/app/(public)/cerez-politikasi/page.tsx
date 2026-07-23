@@ -8,6 +8,7 @@ export default function CookiesPage() {
     <PagePlaceholder
       title="Çerez Politikası"
       description="Çerez politikası metni bu sayfada yayınlanacaktır."
+      breadcrumbs={[{ label: "Çerez Politikası" }]}
     />
   );
 }

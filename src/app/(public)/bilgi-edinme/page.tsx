@@ -8,6 +8,7 @@ export default function InformationRequestPage() {
     <PagePlaceholder
       title="Bilgi Edinme"
       description="Bilgi edinme formu ve takip altyapısı sonraki fazda eklenecektir."
+      breadcrumbs={[{ label: "Bilgi Edinme" }]}
     />
   );
 }

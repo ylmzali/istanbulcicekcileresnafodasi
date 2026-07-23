@@ -8,6 +8,7 @@ export default function AnnouncementsPage() {
     <PagePlaceholder
       title="Duyurular"
       description="Oda duyuruları bu bölümde listelenecektir."
+      breadcrumbs={[{ label: "Duyurular" }]}
     />
   );
 }

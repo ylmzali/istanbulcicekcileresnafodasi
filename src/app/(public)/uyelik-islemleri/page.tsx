@@ -8,6 +8,7 @@ export default function MembershipPage() {
     <PagePlaceholder
       title="Üyelik İşlemleri"
       description="Üyelik koşulları, başvuru adımları ve belge süreçleri bu sayfada yayınlanacaktır."
+      breadcrumbs={[{ label: "Üyelik İşlemleri" }]}
     />
   );
 }

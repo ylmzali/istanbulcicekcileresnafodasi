@@ -1,4 +1,5 @@
 import { PagePlaceholder } from "@/components/layout/page-placeholder";
+import { routes } from "@/lib/routes";
 import { isValidSlug } from "@/lib/slug";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -24,6 +25,10 @@ export default async function AnnouncementDetailPage({
     <PagePlaceholder
       title="Duyuru detayı"
       description={`Bu duyuru sayfası hazırlanıyor. Slug: ${slug}`}
+      breadcrumbs={[
+        { label: "Duyurular", href: routes.announcements.root },
+        { label: slug },
+      ]}
     />
   );
 }

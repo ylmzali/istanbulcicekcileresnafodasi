@@ -8,6 +8,7 @@ export default function KvkkPage() {
     <PagePlaceholder
       title="KVKK Aydınlatma Metni"
       description="Kişisel verilerin korunması aydınlatma metni bu sayfada yayınlanacaktır."
+      breadcrumbs={[{ label: "KVKK Aydınlatma Metni" }]}
     />
   );
 }

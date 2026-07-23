@@ -8,6 +8,7 @@ export default function ComplaintPage() {
     <PagePlaceholder
       title="Dilek & Şikâyet"
       description="Dilek ve şikâyet başvuru formu sonraki fazda eklenecektir."
+      breadcrumbs={[{ label: "Dilek & Şikâyet" }]}
     />
   );
 }

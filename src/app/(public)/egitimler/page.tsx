@@ -8,6 +8,7 @@ export default function TrainingsPage() {
     <PagePlaceholder
       title="Eğitimler ve Etkinlikler"
       description="Yaklaşan eğitim ve etkinlik takvimi bu alanda yönetilecektir."
+      breadcrumbs={[{ label: "Eğitimler" }]}
     />
   );
 }

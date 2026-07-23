@@ -1,3 +1,4 @@
+import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { resolveMemberLoginReturn, routes } from "@/lib/routes";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -18,6 +19,7 @@ export default async function MemberLoginPage({
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-16">
+      <Breadcrumb items={[{ label: "Üye Girişi" }]} />
       <h1 className="text-2xl font-semibold text-[var(--color-text)]">
         Üye Girişi
       </h1>

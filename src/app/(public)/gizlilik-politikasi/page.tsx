@@ -8,6 +8,7 @@ export default function PrivacyPage() {
     <PagePlaceholder
       title="Gizlilik Politikası"
       description="Gizlilik politikası metni bu sayfada yayınlanacaktır."
+      breadcrumbs={[{ label: "Gizlilik Politikası" }]}
     />
   );
 }

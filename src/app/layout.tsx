@@ -6,6 +6,8 @@ const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin", "latin-ext"],
   display: "swap",
+  preload: true,
+  adjustFontFallback: true,
 });
 
 export const metadata: Metadata = {
@@ -31,8 +33,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr" className={`${inter.variable} h-full antialiased`}>
-      <body className="flex min-h-dvh flex-col bg-[var(--color-surface)] font-sans text-[var(--color-text)]">
+    <html lang="tr" className={`${inter.variable} h-full antialiased`} suppressHydrationWarning>
+      <body className="flex min-h-dvh flex-col bg-[var(--color-surface)] font-sans text-[var(--color-text)]" suppressHydrationWarning>
         {children}
       </body>
     </html>

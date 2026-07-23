@@ -21,9 +21,11 @@ export const siteConfig = {
   address: "Tarlabaşı Bulvarı No: 232 K: 1 Beyoğlu / İstanbul",
   istanbulDistrictCount: 39,
   social: {
-    instagram: "https://www.instagram.com/",
-    facebook: "https://www.facebook.com/",
+    instagram: "https://www.instagram.com/istanbulcicekcileresnafodasi",
+    facebook: "https://www.facebook.com/istanbulcicekcileresnafodasi",
   },
+  kep: "istanbulcicekcileresnaf@hs01.kep.tr",
+  whatsappHref: "https://wa.me/905527347670",
   logo: {
     src: logoImage as StaticImageData,
     alt: "İstanbul Çiçekçiler Esnaf Odası logosu",
@@ -49,6 +51,7 @@ export const publicNav = [
       { href: routes.corporate.root, label: "Oda Hakkında" },
       { href: routes.corporate.presidentMessage, label: "Başkanın Mesajı" },
       { href: routes.corporate.board, label: "Yönetim Kurulu" },
+      { href: routes.corporate.auditBoard, label: "Denetim Kurulu" },
       { href: routes.corporate.pastPresidents, label: "Geçmiş Dönem Başkanları" },
     ],
   },

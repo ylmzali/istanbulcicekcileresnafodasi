@@ -9,6 +9,7 @@ export default function ContactPage() {
     <PagePlaceholder
       title="İletişim"
       description={`${siteConfig.address} · ${siteConfig.phoneDisplay} · ${siteConfig.email}`}
+      breadcrumbs={[{ label: "İletişim" }]}
     />
   );
 }

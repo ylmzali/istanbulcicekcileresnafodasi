@@ -8,6 +8,7 @@ export default function LegislationPage() {
     <PagePlaceholder
       title="Mevzuat"
       description="Kanun, yönetmelik ve indirilebilir kaynaklar CMS bağlandığında burada listelenecektir."
+      breadcrumbs={[{ label: "Mevzuat" }]}
     />
   );
 }
