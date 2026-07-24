@@ -43,8 +43,7 @@ const cards: Array<{
   },
   {
     key: "dues",
-    href: routes.member.dues,
-    loginReturn: "aidat",
+    href: routes.membership.dues,
     icon: <WalletIcon className="h-5 w-5" />,
     number: 3,
   },

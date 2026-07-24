@@ -2,6 +2,9 @@ import type { StaticImageData } from "next/image";
 import experienceBadgeImage from "../../public/images/hero-experience-badge.png";
 import heroFloristImage from "../../public/images/hero-florist.png";
 import logoImage from "../../public/images/logo.png";
+import istesobLogo from "../../public/images/partners/istesob.png";
+import teskLogo from "../../public/images/partners/tesk.jpg";
+import ticaretBakanligiLogo from "../../public/images/partners/ticaret-bakanligi.png";
 
 /**
  * Brand images are imported (not plain `/public` URLs) so Next.js embeds a
@@ -38,6 +41,26 @@ export const siteConfig = {
     src: experienceBadgeImage as StaticImageData,
     alt: "Yıllık tecrübe",
   },
+  parentOrganizations: [
+    {
+      name: "T.C. Ticaret Bakanlığı",
+      href: "https://www.ticaret.gov.tr",
+      src: ticaretBakanligiLogo as StaticImageData,
+      alt: "T.C. Ticaret Bakanlığı logosu",
+    },
+    {
+      name: "TESK",
+      href: "https://www.tesk.org.tr",
+      src: teskLogo as StaticImageData,
+      alt: "Türkiye Esnaf ve Sanatkârları Konfederasyonu logosu",
+    },
+    {
+      name: "İSTESOB",
+      href: "https://www.istesob.org.tr",
+      src: istesobLogo as StaticImageData,
+      alt: "İstanbul Esnaf ve Sanatkarlar Odaları Birliği logosu",
+    },
+  ],
 };
 
 import { routes } from "@/lib/routes";
@@ -61,11 +84,12 @@ export const publicNav = [
     children: [
       { href: routes.membership.root, label: "Üyelik Koşulları" },
       { href: routes.membership.apply, label: "Üyelik Başvurusu" },
+      { href: routes.membership.dues, label: "Aidat Sorgulama" },
       { href: routes.documentVerification, label: "Evrak Doğrulama" },
     ],
   },
   { href: routes.legislation, labelKey: "legislation" as const, children: null },
-  { href: routes.trainings, labelKey: "trainings" as const, children: null },
+  { href: routes.events.root, labelKey: "events" as const, children: null },
   { href: routes.news.root, labelKey: "news" as const, children: null },
   { href: routes.contact, labelKey: "contact" as const, children: null },
 ] as const;

@@ -66,6 +66,20 @@ export function ChevronDownIcon({ className }: IconProps) {
   );
 }
 
+export function ChevronUpIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="m7 14 5-5 5 5"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function ChevronLeftIcon({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -170,6 +184,21 @@ export function CalendarIcon({ className }: IconProps) {
   );
 }
 
+export function ClockIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle cx="12" cy="12" r="8.25" stroke="currentColor" strokeWidth="1.6" />
+      <path
+        d="M12 7.75V12l3 2"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function UserIcon({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -244,6 +273,41 @@ export function MenuIcon({ className }: IconProps) {
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
         d="M4 7h16M4 12h16M4 17h16"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+export function CheckIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M5.5 12.5 10 17l8.5-9.5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function SpinnerIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle
+        cx="12"
+        cy="12"
+        r="8.25"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        opacity="0.25"
+      />
+      <path
+        d="M20.25 12a8.25 8.25 0 0 0-8.25-8.25"
         stroke="currentColor"
         strokeWidth="1.6"
         strokeLinecap="round"
@@ -328,6 +392,87 @@ export function NewspaperIcon({ className }: IconProps) {
       />
       <path
         d="M8 9.5h7M8 13h7M8 16.5h4"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+export function ImageIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <rect
+        x="3.5"
+        y="5.5"
+        width="17"
+        height="13"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="1.6"
+      />
+      <circle cx="9" cy="10" r="1.5" stroke="currentColor" strokeWidth="1.6" />
+      <path
+        d="m7.5 16.5 3.2-3.2a1.2 1.2 0 0 1 1.7 0L16 17m-2.5-2.5 1.3-1.3a1.2 1.2 0 0 1 1.7 0l2.5 2.5"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function PrinterIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M7.5 8.5V5.75A1.25 1.25 0 0 1 8.75 4.5h6.5A1.25 1.25 0 0 1 16.5 5.75V8.5"
+        stroke="currentColor"
+        strokeWidth="1.6"
+      />
+      <rect
+        x="4.5"
+        y="8.5"
+        width="15"
+        height="8"
+        rx="1.5"
+        stroke="currentColor"
+        strokeWidth="1.6"
+      />
+      <path
+        d="M7.5 16.5v3.25A.75.75 0 0 0 8.25 20.5h7.5a.75.75 0 0 0 .75-.75V16.5"
+        stroke="currentColor"
+        strokeWidth="1.6"
+      />
+      <path
+        d="M16.5 11.5h.01"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+export function LinkIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M9.5 14.5 8 16a3.5 3.5 0 0 1-5-5l2.2-2.2a3.5 3.5 0 0 1 5 0"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+      <path
+        d="m14.5 9.5 1.5-1.5a3.5 3.5 0 0 1 5 5L19 14.8a3.5 3.5 0 0 1-5 0"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+      <path
+        d="m9 15 6-6"
         stroke="currentColor"
         strokeWidth="1.6"
         strokeLinecap="round"

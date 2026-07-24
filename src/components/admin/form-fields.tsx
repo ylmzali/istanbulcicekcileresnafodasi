@@ -8,17 +8,37 @@ import type {
 const fieldClass =
   "w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-1.5 text-sm leading-5 text-[var(--color-text)] outline-none transition-colors placeholder:text-[var(--color-text-muted)]/70 focus:border-[var(--color-primary-700)] focus:ring-2 focus:ring-[var(--color-primary-100)]";
 
+/** Compact widths for short admin controls (status, dates, numbers). */
+const fieldSizeClass = {
+  sm: "w-full max-w-[8.5rem]",
+  md: "w-full max-w-[13.5rem]",
+  lg: "w-full max-w-[18rem]",
+  xl: "w-full max-w-[28rem]",
+  full: "w-full",
+} as const;
+
+export type FieldSize = keyof typeof fieldSizeClass;
+
 type FieldProps = {
   label: string;
   htmlFor: string;
   hint?: string;
+  /** Constrain field width — prefer this over stretching short inputs. */
+  size?: FieldSize;
   className?: string;
   children: React.ReactNode;
 };
 
-export function Field({ label, htmlFor, hint, className, children }: FieldProps) {
+export function Field({
+  label,
+  htmlFor,
+  hint,
+  size = "full",
+  className,
+  children,
+}: FieldProps) {
   return (
-    <div className={cn("space-y-1", className)}>
+    <div className={cn("space-y-1", fieldSizeClass[size], className)}>
       <label
         htmlFor={htmlFor}
         className="block text-xs font-medium text-[var(--color-text-muted)]"
@@ -71,7 +91,7 @@ export function Checkbox({ label, className, id, ...props }: CheckProps) {
     <label
       htmlFor={inputId}
       className={cn(
-        "inline-flex cursor-pointer items-center gap-2 text-sm text-[var(--color-text)]",
+        "inline-flex cursor-pointer items-center gap-1 text-sm leading-none text-[var(--color-text)]",
         className,
       )}
     >
@@ -81,7 +101,7 @@ export function Checkbox({ label, className, id, ...props }: CheckProps) {
         className="admin-check"
         {...props}
       />
-      <span>{label}</span>
+      <span className="leading-snug">{label}</span>
     </label>
   );
 }
@@ -92,12 +112,12 @@ export function Radio({ label, className, id, ...props }: CheckProps) {
     <label
       htmlFor={inputId}
       className={cn(
-        "inline-flex cursor-pointer items-center gap-2 text-sm text-[var(--color-text)]",
+        "inline-flex cursor-pointer items-center gap-1 text-sm leading-none text-[var(--color-text)]",
         className,
       )}
     >
       <input id={inputId} type="radio" className="admin-radio" {...props} />
-      <span>{label}</span>
+      <span className="leading-snug">{label}</span>
     </label>
   );
 }
@@ -135,6 +155,41 @@ export function StatusBadge({ label }: { label: string }) {
     </span>
   );
 }
+
+export function FormActionAlert({
+  error,
+  success,
+  successMessage = "Kaydedildi.",
+}: {
+  error?: string | null;
+  success?: boolean;
+  successMessage?: string;
+}) {
+  if (error) {
+    return (
+      <p
+        role="alert"
+        className="rounded-[10px] border border-[color-mix(in_srgb,var(--color-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--color-accent)_12%,white)] px-3 py-2.5 text-sm font-medium text-[var(--color-accent)]"
+      >
+        {error}
+      </p>
+    );
+  }
+
+  if (success) {
+    return (
+      <p
+        role="status"
+        className="rounded-[10px] border border-[color-mix(in_srgb,var(--color-primary-700)_30%,transparent)] bg-[var(--color-primary-100)] px-3 py-2.5 text-sm font-medium text-[var(--color-primary-900)]"
+      >
+        {successMessage}
+      </p>
+    );
+  }
+
+  return null;
+}
+
 
 export function AdminFormCard({
   children,

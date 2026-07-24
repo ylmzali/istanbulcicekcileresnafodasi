@@ -1,4 +1,10 @@
-export type MediaPresetId = "post-cover" | "event-cover";
+export type MediaPresetId =
+  | "post-cover"
+  | "event-cover"
+  | "hero-desktop"
+  | "hero-mobile"
+  | "hero-media"
+  | "hero-image-link";
 
 export type MediaPreset = {
   id: MediaPresetId;
@@ -8,24 +14,68 @@ export type MediaPreset = {
   maxWidth: number;
   maxHeight: number;
   quality: number;
+  /** Prefer PNG (lossless) after processing. */
+  lossless?: boolean;
+  /** Avoid secondary crop on server (client already cropped to aspect). */
+  fit?: "cover" | "inside";
 };
+
+/** Canonical post/announcement cover ratio — keep all public displays in sync. */
+export const POST_COVER_ASPECT = 16 / 9;
+export const POST_COVER_ASPECT_CLASS = "aspect-[16/9]";
 
 export const MEDIA_PRESETS: Record<MediaPresetId, MediaPreset> = {
   "post-cover": {
     id: "post-cover",
     folder: "covers",
-    aspect: 16 / 9,
-    maxWidth: 1200,
-    maxHeight: 675,
-    quality: 82,
+    aspect: POST_COVER_ASPECT,
+    maxWidth: 1600,
+    maxHeight: 900,
+    quality: 95,
+    lossless: true,
+    fit: "inside",
   },
   "event-cover": {
     id: "event-cover",
     folder: "covers",
     aspect: 16 / 9,
-    maxWidth: 1200,
-    maxHeight: 675,
-    quality: 82,
+    maxWidth: 1600,
+    maxHeight: 900,
+    quality: 95,
+    lossless: true,
+    fit: "inside",
+  },
+  "hero-desktop": {
+    id: "hero-desktop",
+    folder: "hero",
+    aspect: 16 / 9,
+    maxWidth: 1920,
+    maxHeight: 1080,
+    quality: 84,
+  },
+  "hero-mobile": {
+    id: "hero-mobile",
+    folder: "hero",
+    aspect: 4 / 5,
+    maxWidth: 900,
+    maxHeight: 1125,
+    quality: 84,
+  },
+  "hero-media": {
+    id: "hero-media",
+    folder: "hero",
+    aspect: 328 / 73,
+    maxWidth: 984,
+    maxHeight: 219,
+    quality: 100,
+  },
+  "hero-image-link": {
+    id: "hero-image-link",
+    folder: "hero",
+    aspect: 576 / 285,
+    maxWidth: 1728,
+    maxHeight: 855,
+    quality: 100,
   },
 };
 

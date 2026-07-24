@@ -25,23 +25,26 @@ type ImageUploadFieldProps = {
   onChange: (url: string) => void;
   preset: MediaPresetId;
   labels: UploadLabels;
+  /** Optional usage/ratio hint shown under the field. */
+  hint?: string;
   className?: string;
 };
 
 async function cropImageToBlob(
   imageSrc: string,
   pixelCrop: Area,
-  mimeType = "image/jpeg",
+  mimeType: "image/png" | "image/jpeg" = "image/png",
 ): Promise<Blob> {
   const image = await createImage(imageSrc);
   const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.round(pixelCrop.width));
   canvas.height = Math.max(1, Math.round(pixelCrop.height));
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext("2d", { alpha: true });
   if (!ctx) {
     throw new Error("CANVAS_UNAVAILABLE");
   }
 
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(
     image,
     pixelCrop.x,
@@ -54,6 +57,9 @@ async function cropImageToBlob(
     canvas.height,
   );
 
+  // Prefer PNG (lossless). JPEG only as fallback at maximum quality.
+  const quality = mimeType === "image/jpeg" ? 1 : undefined;
+
   return new Promise((resolve, reject) => {
     canvas.toBlob(
       (blob) => {
@@ -64,7 +70,7 @@ async function cropImageToBlob(
         resolve(blob);
       },
       mimeType,
-      0.92,
+      quality,
     );
   });
 }
@@ -85,6 +91,7 @@ export function ImageUploadField({
   onChange,
   preset,
   labels,
+  hint,
   className,
 }: ImageUploadFieldProps) {
   const inputId = useId();
@@ -97,7 +104,19 @@ export function ImageUploadField({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const aspect = MEDIA_PRESETS[preset].aspect;
+  const presetConfig = MEDIA_PRESETS[preset];
+  const aspect = presetConfig.aspect;
+  const previewWidth =
+    preset === "hero-media"
+      ? 328
+      : preset === "hero-image-link"
+        ? 576
+        : Math.min(presetConfig.maxWidth, 640);
+  const previewStyle = {
+    width: "100%",
+    maxWidth: previewWidth,
+    aspectRatio: `${presetConfig.maxWidth} / ${presetConfig.maxHeight}`,
+  } as const;
 
   const onCropComplete = useCallback((_: Area, pixels: Area) => {
     setCroppedAreaPixels(pixels);
@@ -135,14 +154,21 @@ export function ImageUploadField({
     setError(null);
 
     try {
-      const blob = await cropImageToBlob(sourceUrl, croppedAreaPixels);
+      // Always crop to PNG to avoid a lossy JPEG pass before server processing.
+      const blob = await cropImageToBlob(
+        sourceUrl,
+        croppedAreaPixels,
+        "image/png",
+      );
       const formData = new FormData();
       formData.append("preset", preset);
       formData.append(
         "file",
-        new File([blob], sourceName.replace(/\.[^.]+$/, "") + ".jpg", {
-          type: "image/jpeg",
-        }),
+        new File(
+          [blob],
+          sourceName.replace(/\.[^.]+$/, "") + ".png",
+          { type: "image/png" },
+        ),
       );
 
       const response = await fetch("/api/admin/media/upload", {
@@ -174,19 +200,36 @@ export function ImageUploadField({
       <p className="block text-xs font-medium text-[var(--color-text-muted)]">
         {label}
       </p>
+      {hint ? (
+        <p className="text-[11px] leading-4 text-[var(--color-text-muted)]">
+          {hint}
+        </p>
+      ) : null}
 
       {value ? (
-        <div className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-soft)]">
+        <div
+          className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-soft)]"
+          style={previewStyle}
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={value}
             alt=""
-            className="aspect-video w-full object-cover"
+            className="h-full w-full object-contain"
           />
         </div>
       ) : (
-        <div className="flex aspect-video items-center justify-center rounded-lg border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] text-xs text-[var(--color-text-muted)]">
-          —
+        <div
+          className="flex items-center justify-center rounded-lg border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] text-xs text-[var(--color-text-muted)]"
+          style={previewStyle}
+        >
+          {preset === "hero-media"
+            ? "328×73"
+            : preset === "hero-image-link"
+              ? "576×285"
+              : preset === "post-cover" || preset === "event-cover"
+                ? "16:9 · 1600×900"
+                : `${presetConfig.maxWidth}×${presetConfig.maxHeight}`}
         </div>
       )}
 
@@ -238,10 +281,21 @@ export function ImageUploadField({
           <div className="w-full max-w-2xl rounded-xl bg-[var(--color-surface)] p-4 shadow-lg">
             <h2
               id={`${inputId}-crop-title`}
-              className="mb-3 text-sm font-semibold text-[var(--color-text)]"
+              className="mb-1 text-sm font-semibold text-[var(--color-text)]"
             >
               {labels.cropTitle}
             </h2>
+            {hint ? (
+              <p className="mb-3 text-[11px] text-[var(--color-text-muted)]">
+                {hint}
+              </p>
+            ) : (
+              <p className="mb-3 text-[11px] text-[var(--color-text-muted)]">
+                {preset === "post-cover" || preset === "event-cover"
+                  ? "16:9"
+                  : `${presetConfig.maxWidth}×${presetConfig.maxHeight}`}
+              </p>
+            )}
             <div className="relative h-72 overflow-hidden rounded-lg bg-black sm:h-96">
               <Cropper
                 image={sourceUrl}

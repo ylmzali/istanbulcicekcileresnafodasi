@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { ContentStatus } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db";
-import { slugify, slugSchema } from "@/lib/slug";
+import { resolveEntitySlug } from "@/lib/resolve-slug";
 import { contentStatusSchema } from "@/services/posts";
 
 export const eventInputSchema = z.object({
@@ -18,6 +18,7 @@ export const eventInputSchema = z.object({
   registrationOpen: z.string().optional().nullable(),
   registrationClose: z.string().optional().nullable(),
   status: contentStatusSchema.default("draft"),
+  featured: z.boolean().default(false),
   coverImage: z.string().trim().max(500).optional().nullable(),
 });
 
@@ -37,23 +38,28 @@ function parseOptionalDate(value: string | null | undefined) {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-async function uniqueEventSlug(base: string, excludeId?: string) {
-  const validated = slugSchema.parse(base || "etkinlik");
-  let candidate = validated;
-  let index = 2;
+async function isEventSlugTaken(slug: string, excludeId?: string) {
+  const existing = await prisma.event.findFirst({
+    where: {
+      slug,
+      ...(excludeId ? { NOT: { id: excludeId } } : {}),
+    },
+    select: { id: true },
+  });
+  return Boolean(existing);
+}
 
-  while (true) {
-    const existing = await prisma.event.findFirst({
-      where: {
-        slug: candidate,
-        ...(excludeId ? { NOT: { id: excludeId } } : {}),
-      },
-      select: { id: true },
-    });
-    if (!existing) return candidate;
-    candidate = `${validated}-${index}`;
-    index += 1;
-  }
+async function resolveEventSlug(
+  provided: string | null | undefined,
+  title: string,
+  excludeId?: string,
+) {
+  return resolveEntitySlug({
+    provided,
+    fromTitle: title,
+    emptyFallback: "etkinlik",
+    isTaken: (slug) => isEventSlugTaken(slug, excludeId),
+  });
 }
 
 export async function listEvents(filters?: {
@@ -80,7 +86,11 @@ export async function listEvents(filters?: {
   const [rows, total] = await Promise.all([
     prisma.event.findMany({
       where,
-      orderBy: [{ startsAt: "desc" }],
+      orderBy: [
+        { featured: "desc" },
+        { sortOrder: "asc" },
+        { startsAt: "desc" },
+      ],
       include: {
         _count: { select: { registrations: true } },
       },
@@ -102,11 +112,39 @@ export async function getEventById(id: string) {
   });
 }
 
+async function nextFeaturedEventSortOrder(excludeId?: string) {
+  const max = await prisma.event.aggregate({
+    where: {
+      deletedAt: null,
+      featured: true,
+      ...(excludeId ? { NOT: { id: excludeId } } : {}),
+    },
+    _max: { sortOrder: true },
+  });
+  return (max._max.sortOrder ?? -1) + 1;
+}
+
+async function reindexFeaturedEvents() {
+  const rows = await prisma.event.findMany({
+    where: { deletedAt: null, featured: true },
+    orderBy: [{ sortOrder: "asc" }, { startsAt: "asc" }, { id: "asc" }],
+    select: { id: true },
+  });
+
+  await prisma.$transaction(
+    rows.map((row, sortOrder) =>
+      prisma.event.update({
+        where: { id: row.id },
+        data: { sortOrder },
+      }),
+    ),
+  );
+}
+
 export async function createEvent(raw: EventInput) {
   const input = eventInputSchema.parse(raw);
-  const slug = await uniqueEventSlug(
-    input.slug?.trim() ? slugify(input.slug) : slugify(input.title),
-  );
+  const slug = await resolveEventSlug(input.slug, input.title);
+  const sortOrder = input.featured ? await nextFeaturedEventSortOrder() : 0;
 
   return prisma.event.create({
     data: {
@@ -123,6 +161,8 @@ export async function createEvent(raw: EventInput) {
       registrationOpen: parseOptionalDate(input.registrationOpen),
       registrationClose: parseOptionalDate(input.registrationClose),
       status: input.status,
+      featured: input.featured,
+      sortOrder,
       coverImage: input.coverImage || null,
     },
   });
@@ -135,12 +175,16 @@ export async function updateEvent(id: string, raw: EventInput) {
   }
 
   const input = eventInputSchema.parse(raw);
-  const slug = await uniqueEventSlug(
-    input.slug?.trim() ? slugify(input.slug) : slugify(input.title),
-    id,
-  );
+  const slug = await resolveEventSlug(input.slug, input.title, id);
 
-  return prisma.event.update({
+  let sortOrder = existing.sortOrder;
+  if (input.featured && !existing.featured) {
+    sortOrder = await nextFeaturedEventSortOrder(id);
+  } else if (!input.featured && existing.featured) {
+    sortOrder = 0;
+  }
+
+  const updated = await prisma.event.update({
     where: { id },
     data: {
       title: input.title,
@@ -156,9 +200,17 @@ export async function updateEvent(id: string, raw: EventInput) {
       registrationOpen: parseOptionalDate(input.registrationOpen),
       registrationClose: parseOptionalDate(input.registrationClose),
       status: input.status,
+      featured: input.featured,
+      sortOrder,
       coverImage: input.coverImage || null,
     },
   });
+
+  if (!input.featured && existing.featured) {
+    await reindexFeaturedEvents();
+  }
+
+  return updated;
 }
 
 export async function softDeleteEvent(id: string) {
@@ -167,8 +219,186 @@ export async function softDeleteEvent(id: string) {
     throw new Error("NOT_FOUND");
   }
 
-  return prisma.event.update({
+  const updated = await prisma.event.update({
     where: { id },
-    data: { deletedAt: new Date(), status: "archived" },
+    data: { deletedAt: new Date(), status: "archived", featured: false, sortOrder: 0 },
+  });
+
+  if (existing.featured) {
+    await reindexFeaturedEvents();
+  }
+
+  return updated;
+}
+
+export async function setEventFeatured(id: string, featured: boolean) {
+  const existing = await getEventById(id);
+  if (!existing) {
+    throw new Error("NOT_FOUND");
+  }
+
+  if (existing.featured === featured) {
+    return existing;
+  }
+
+  if (featured) {
+    return prisma.event.update({
+      where: { id },
+      data: {
+        featured: true,
+        sortOrder: await nextFeaturedEventSortOrder(id),
+      },
+    });
+  }
+
+  const updated = await prisma.event.update({
+    where: { id },
+    data: { featured: false, sortOrder: 0 },
+  });
+  await reindexFeaturedEvents();
+  return updated;
+}
+
+export async function moveEventSort(id: string, direction: "up" | "down") {
+  const rows = await prisma.event.findMany({
+    where: { deletedAt: null, featured: true },
+    orderBy: [{ sortOrder: "asc" }, { startsAt: "asc" }, { id: "asc" }],
+    select: { id: true },
+  });
+
+  const index = rows.findIndex((row) => row.id === id);
+  if (index < 0) {
+    throw new Error("NOT_FOUND");
+  }
+
+  const target = direction === "up" ? index - 1 : index + 1;
+  if (target < 0 || target >= rows.length) {
+    return { moved: false as const };
+  }
+
+  const ordered = [...rows];
+  const current = ordered[index]!;
+  ordered[index] = ordered[target]!;
+  ordered[target] = current;
+
+  await prisma.$transaction(
+    ordered.map((row, sortOrder) =>
+      prisma.event.update({
+        where: { id: row.id },
+        data: { sortOrder },
+      }),
+    ),
+  );
+
+  return { moved: true as const };
+}
+
+export async function listFeaturedEventIds() {
+  const rows = await prisma.event.findMany({
+    where: { deletedAt: null, featured: true },
+    orderBy: [{ sortOrder: "asc" }, { startsAt: "asc" }, { id: "asc" }],
+    select: { id: true },
+  });
+  return rows.map((row) => row.id);
+}
+
+const publicEventSelect = {
+  id: true,
+  title: true,
+  slug: true,
+  description: true,
+  eventType: true,
+  location: true,
+  isOnline: true,
+  startsAt: true,
+  endsAt: true,
+  capacity: true,
+  coverImage: true,
+  featured: true,
+  sortOrder: true,
+} as const;
+
+export async function listUpcomingEvents(limit = 3) {
+  const now = new Date();
+  return prisma.event.findMany({
+    where: {
+      deletedAt: null,
+      status: "published",
+      startsAt: { gte: now },
+    },
+    orderBy: [
+      { featured: "desc" },
+      { sortOrder: "asc" },
+      { startsAt: "asc" },
+    ],
+    take: limit,
+    select: publicEventSelect,
+  });
+}
+
+export async function listPublishedEvents(filters?: {
+  page?: number;
+  pageSize?: number;
+  upcomingOnly?: boolean;
+  scope?: "all" | "upcoming" | "past";
+}) {
+  const page = Math.max(1, filters?.page ?? 1);
+  const pageSize = Math.min(50, Math.max(1, filters?.pageSize ?? 12));
+  const now = new Date();
+  const scope =
+    filters?.scope ?? (filters?.upcomingOnly ? "upcoming" : "all");
+
+  const where = {
+    deletedAt: null as Date | null,
+    status: "published" as const,
+    ...(scope === "upcoming"
+      ? { startsAt: { gte: now } }
+      : scope === "past"
+        ? { startsAt: { lt: now } }
+        : {}),
+  };
+
+  const orderAsc = scope === "upcoming";
+
+  const [rows, total] = await Promise.all([
+    prisma.event.findMany({
+      where,
+      orderBy: orderAsc
+        ? [
+            { featured: "desc" },
+            { sortOrder: "asc" },
+            { startsAt: "asc" },
+          ]
+        : [
+            { featured: "desc" },
+            { sortOrder: "asc" },
+            { startsAt: "desc" },
+          ],
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      select: publicEventSelect,
+    }),
+    prisma.event.count({ where }),
+  ]);
+
+  return { rows, total, page, pageSize, scope };
+}
+
+export async function getPublishedEventBySlug(slug: string) {
+  if (!slug) return null;
+  return prisma.event.findFirst({
+    where: {
+      slug,
+      deletedAt: null,
+      status: "published",
+    },
+  });
+}
+
+export async function listPublishedEventSlugs() {
+  return prisma.event.findMany({
+    where: { deletedAt: null, status: "published" },
+    select: { slug: true, updatedAt: true, startsAt: true },
+    orderBy: [{ startsAt: "desc" }],
   });
 }

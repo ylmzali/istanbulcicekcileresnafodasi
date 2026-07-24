@@ -853,6 +853,7 @@ model Post {
   coverImage     String?       @map("cover_image") @db.VarChar(500)
   status         ContentStatus @default(draft)
   featured       Boolean       @default(false)
+  sortOrder      Int           @default(0) @map("sort_order")
   seoTitle       String?       @map("seo_title") @db.VarChar(255)
   seoDescription String?       @map("seo_description") @db.VarChar(320)
   publishedAt    DateTime?     @map("published_at")
@@ -864,7 +865,7 @@ model Post {
   categories PostCategoryRelation[]
 
   @@index([type, status, publishedAt])
-  @@index([featured])
+  @@index([featured, sortOrder])
   @@index([slug])
   @@map("posts")
 }
@@ -895,6 +896,8 @@ model Event {
   registrationOpen DateTime?     @map("registration_open")
   registrationClose DateTime?    @map("registration_close")
   status           ContentStatus @default(draft)
+  featured         Boolean       @default(false)
+  sortOrder        Int           @default(0) @map("sort_order")
   coverImage       String?       @map("cover_image") @db.VarChar(500)
   createdAt        DateTime      @default(now()) @map("created_at")
   updatedAt        DateTime      @updatedAt @map("updated_at")
@@ -904,6 +907,7 @@ model Event {
   materials     EventMaterial[]
 
   @@index([status, startsAt])
+  @@index([featured, sortOrder])
   @@map("events")
 }
 
@@ -1037,20 +1041,37 @@ model MenuItem {
   @@map("menu_items")
 }
 
-model Banner {
-  id        String    @id @default(cuid())
-  title     String    @db.VarChar(255)
-  subtitle  String?   @db.VarChar(500)
-  imageKey  String?   @map("image_key") @db.VarChar(500)
-  mobileImageKey String? @map("mobile_image_key") @db.VarChar(500)
-  ctaLabel  String?   @map("cta_label") @db.VarChar(120)
-  ctaHref   String?   @map("cta_href") @db.VarChar(500)
-  active    Boolean   @default(true)
-  startsAt  DateTime? @map("starts_at")
-  endsAt    DateTime? @map("ends_at")
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
+enum BannerVariant {
+  text_cta
+  media_cta
+  image_link
 
+  @@map("banner_variant")
+}
+
+/// Home hero carousel slides — not news/posts.
+model Banner {
+  id                String        @id @default(cuid())
+  variant           BannerVariant @default(text_cta)
+  eyebrow           String?       @db.VarChar(160)
+  title             String        @db.VarChar(255)
+  description       String?       @db.Text
+  imageKey          String?       @map("image_key") @db.VarChar(500)
+  mobileImageKey    String?       @map("mobile_image_key") @db.VarChar(500)
+  primaryCtaLabel   String?       @map("primary_cta_label") @db.VarChar(120)
+  primaryCtaHref    String?       @map("primary_cta_href") @db.VarChar(500)
+  primaryCtaNewTab  Boolean       @default(false) @map("primary_cta_new_tab")
+  secondaryCtaLabel String?       @map("secondary_cta_label") @db.VarChar(120)
+  secondaryCtaHref  String?       @map("secondary_cta_href") @db.VarChar(500)
+  secondaryCtaNewTab Boolean      @default(false) @map("secondary_cta_new_tab")
+  sortOrder         Int           @default(0) @map("sort_order")
+  active            Boolean       @default(true)
+  startsAt          DateTime?     @map("starts_at")
+  endsAt            DateTime?     @map("ends_at")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  @@index([active, sortOrder])
   @@index([active, startsAt, endsAt])
   @@map("banners")
 }

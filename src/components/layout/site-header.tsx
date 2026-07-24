@@ -24,15 +24,18 @@ export function SiteHeader() {
   const lastScrollY = useRef(0);
 
   useEffect(() => {
+    lastScrollY.current = window.scrollY;
+
     const onScroll = () => {
-      const currentY = window.scrollY;
+      const currentY = Math.max(0, window.scrollY);
       const delta = currentY - lastScrollY.current;
 
-      if (currentY < 64) {
+      if (currentY < 80) {
         setHidden(false);
-      } else if (delta > 6) {
+      } else if (delta > 8) {
         setHidden(true);
-      } else if (delta < -6) {
+      } else if (delta < -4) {
+        // Slight upward scroll should reveal the header quickly.
         setHidden(false);
       }
 
@@ -48,14 +51,14 @@ export function SiteHeader() {
     corporate: messages.nav.corporate,
     membership: messages.nav.membership,
     legislation: messages.nav.legislation,
-    trainings: messages.nav.trainings,
+    events: messages.nav.events,
     news: messages.nav.news,
     contact: messages.nav.contact,
   };
 
   return (
     <header
-      className={`sticky top-0 z-40 border-b border-[var(--color-border)] bg-white/95 backdrop-blur transition-transform duration-300 ease-out ${
+      className={`sticky top-0 z-40 border-b border-[var(--color-border)] bg-white/95 backdrop-blur transition-transform duration-300 ease-out print:hidden ${
         hidden ? "-translate-y-full" : "translate-y-0"
       }`}
     >

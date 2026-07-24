@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AutoSubmitSelect } from "@/components/admin/auto-submit-select";
 import { buildAdminTableHref } from "@/lib/admin-table";
 import { cn } from "@/lib/utils";
@@ -9,6 +12,8 @@ export type DataTableColumn<T> = {
   cell: (row: T) => React.ReactNode;
   className?: string;
   headerClassName?: string;
+  /** Interactive cells (buttons/checkboxes) — row click is ignored here. */
+  interactive?: boolean;
 };
 
 export type DataTableFilter = {
@@ -35,6 +40,8 @@ type AdminDataTableProps<T> = {
   columns: DataTableColumn<T>[];
   filters?: DataTableFilter[];
   getRowId: (row: T) => string;
+  /** When set, clicking a non-interactive cell navigates here. */
+  getRowHref?: (row: T) => string;
   labels: DataTableLabels;
   basePath: string;
   total: number;
@@ -45,11 +52,21 @@ type AdminDataTableProps<T> = {
   toolbarEnd?: React.ReactNode;
 };
 
+function isInteractiveTarget(target: EventTarget | null) {
+  if (!(target instanceof Element)) return false;
+  return Boolean(
+    target.closest(
+      "a, button, input, label, select, textarea, [data-row-stop]",
+    ),
+  );
+}
+
 export function AdminDataTable<T>({
   rows,
   columns,
   filters = [],
   getRowId,
+  getRowHref,
   labels,
   basePath,
   total,
@@ -58,6 +75,7 @@ export function AdminDataTable<T>({
   query,
   toolbarEnd,
 }: AdminDataTableProps<T>) {
+  const router = useRouter();
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const currentPage = Math.min(Math.max(1, page), totalPages);
 
@@ -156,21 +174,57 @@ export function AdminDataTable<T>({
                 </td>
               </tr>
             ) : (
-              rows.map((row) => (
-                <tr
-                  key={getRowId(row)}
-                  className="border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-surface-soft)]/70"
-                >
-                  {columns.map((column) => (
-                    <td
-                      key={column.id}
-                      className={cn("px-3 py-2.5 align-middle", column.className)}
-                    >
-                      {column.cell(row)}
-                    </td>
-                  ))}
-                </tr>
-              ))
+              rows.map((row) => {
+                const href = getRowHref?.(row);
+                return (
+                  <tr
+                    key={getRowId(row)}
+                    className={cn(
+                      "border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-surface-soft)]/70",
+                      href ? "cursor-pointer" : null,
+                    )}
+                    onClick={
+                      href
+                        ? (event) => {
+                            if (isInteractiveTarget(event.target)) return;
+                            router.push(href);
+                          }
+                        : undefined
+                    }
+                    onKeyDown={
+                      href
+                        ? (event) => {
+                            if (event.key !== "Enter" && event.key !== " ") {
+                              return;
+                            }
+                            if (isInteractiveTarget(event.target)) return;
+                            event.preventDefault();
+                            router.push(href);
+                          }
+                        : undefined
+                    }
+                    tabIndex={href ? 0 : undefined}
+                  >
+                    {columns.map((column) => (
+                      <td
+                        key={column.id}
+                        className={cn(
+                          "px-3 py-2.5 align-middle",
+                          column.className,
+                        )}
+                        data-row-stop={column.interactive ? "" : undefined}
+                        onClick={
+                          column.interactive
+                            ? (event) => event.stopPropagation()
+                            : undefined
+                        }
+                      >
+                        {column.cell(row)}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

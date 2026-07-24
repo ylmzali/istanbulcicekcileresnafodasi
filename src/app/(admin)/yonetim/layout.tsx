@@ -3,5 +3,5 @@ export default function AdminRootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return <div className="min-h-dvh bg-[var(--color-surface-soft)]">{children}</div>;
 }

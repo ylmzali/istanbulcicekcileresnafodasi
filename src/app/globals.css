@@ -66,14 +66,16 @@ summary::-webkit-details-marker {
 .admin-check,
 .admin-radio {
   appearance: none;
+  position: relative;
   width: 1rem;
   height: 1rem;
   margin: 0;
   flex-shrink: 0;
   border: 1.5px solid var(--color-border);
   background: var(--color-surface);
-  display: inline-grid;
-  place-content: center;
+  display: inline-block;
+  vertical-align: middle;
+  overflow: hidden;
   transition:
     border-color 120ms ease,
     background-color 120ms ease,
@@ -106,25 +108,102 @@ summary::-webkit-details-marker {
   background: var(--color-primary-800);
 }
 
-.admin-check:checked::before {
+/* Keep ::before always in the box so checked state doesn't shift layout */
+.admin-check::before {
   content: "";
+  position: absolute;
+  left: 50%;
+  top: 45%;
   width: 0.28rem;
   height: 0.5rem;
-  border: solid white;
+  border: solid transparent;
   border-width: 0 1.8px 1.8px 0;
-  transform: translateY(-0.5px) rotate(45deg);
+  transform: translate(-50%, -50%) rotate(45deg);
+  opacity: 0;
 }
 
-.admin-radio:checked::before {
+.admin-check:checked::before {
+  border-color: white;
+  opacity: 1;
+}
+
+.admin-radio::before {
   content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
   width: 0.375rem;
   height: 0.375rem;
   border-radius: 999px;
   background: white;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+}
+
+.admin-radio:checked::before {
+  opacity: 1;
 }
 
 .admin-check:disabled,
 .admin-radio:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.istanbul-district-tooltip {
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: rgba(11, 61, 40, 0.94) !important;
+  color: #fff !important;
+  box-shadow: 0 8px 20px rgba(23, 35, 29, 0.18) !important;
+  padding: 4px 8px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+
+.istanbul-district-tooltip::before {
+  border-top-color: rgba(11, 61, 40, 0.94) !important;
+}
+
+@media print {
+  @page {
+    margin: 14mm;
+  }
+
+  body {
+    background: #fff !important;
+    color: #17231d !important;
+  }
+
+  body:has(.post-print-root) * {
+    visibility: hidden;
+  }
+
+  body:has(.post-print-root) .post-print-root,
+  body:has(.post-print-root) .post-print-root * {
+    visibility: visible;
+  }
+
+  body:has(.post-print-root) .post-print-root {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    background: #fff !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+  }
+
+  body:has(.post-print-root) .post-print-root .print\:hidden {
+    display: none !important;
+    visibility: hidden !important;
+  }
+}
+
+/* Admin app: isolate from public site chrome expectations */
+[data-admin-app] {
+  min-height: 100dvh;
 }

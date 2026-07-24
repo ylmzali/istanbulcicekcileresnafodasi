@@ -1,18 +1,10 @@
-import { PagePlaceholder } from "@/components/layout/page-placeholder";
-import { routes } from "@/lib/routes";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { routes } from "@/lib/routes";
 
 export const metadata: Metadata = { title: "Aidat Sorgula" };
 
+/** Member portal dues UI comes later; public payment info lives at /aidat-sorgulama. */
 export default function MemberDuesPage() {
-  return (
-    <PagePlaceholder
-      title="Aidat Sorgula"
-      description="Aidat sorgulama ve ödeme geçmişi üye girişi tamamlandığında burada açılacaktır."
-      breadcrumbs={[
-        { label: "Üye Girişi", href: routes.member.login },
-        { label: "Aidat Sorgula" },
-      ]}
-    />
-  );
+  redirect(routes.membership.dues);
 }

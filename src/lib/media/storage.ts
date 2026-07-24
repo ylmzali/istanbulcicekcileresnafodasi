@@ -49,17 +49,38 @@ export async function processAndStoreImage(input: {
     throw new Error("INVALID_PRESET");
   }
 
-  const processed = await sharp(input.buffer)
+  const metadata = await sharp(input.buffer).metadata();
+  const hasAlpha = Boolean(metadata.hasAlpha);
+  // Hero assets, transparent images, and lossless presets stay PNG.
+  const preferLossless =
+    hasAlpha ||
+    Boolean(preset.lossless) ||
+    input.presetId === "hero-media" ||
+    input.presetId === "hero-image-link" ||
+    input.presetId === "hero-desktop" ||
+    input.presetId === "hero-mobile";
+
+  const pipeline = sharp(input.buffer, { failOn: "none" })
     .rotate()
     .resize({
       width: preset.maxWidth,
       height: preset.maxHeight,
-      fit: "cover",
+      fit: preset.fit ?? "cover",
       position: "centre",
       withoutEnlargement: true,
-    })
-    .webp({ quality: preset.quality })
-    .toBuffer({ resolveWithObject: true });
+      kernel: sharp.kernel.lanczos3,
+    });
+
+  const processed = preferLossless
+    ? await pipeline.png({ compressionLevel: 6, effort: 7 }).toBuffer({
+        resolveWithObject: true,
+      })
+    : await pipeline
+        .webp({ quality: Math.max(preset.quality, 95), effort: 4 })
+        .toBuffer({ resolveWithObject: true });
+
+  const extension = preferLossless ? "png" : "webp";
+  const mimeType = preferLossless ? "image/png" : "image/webp";
 
   const now = new Date();
   const year = String(now.getFullYear());
@@ -69,7 +90,7 @@ export async function processAndStoreImage(input: {
     "",
   );
   const unique = randomBytes(4).toString("hex");
-  const filename = `${baseName || "gorsel"}-${unique}.webp`;
+  const filename = `${baseName || "gorsel"}-${unique}.${extension}`;
   const relativeDir = path.posix.join("uploads", preset.folder, year, month);
   const absoluteDir = path.join(process.cwd(), "public", relativeDir);
   await mkdir(absoluteDir, { recursive: true });
@@ -82,7 +103,7 @@ export async function processAndStoreImage(input: {
     storageKey,
     publicUrl: `/${storageKey}`,
     filename,
-    mimeType: "image/webp",
+    mimeType,
     size: processed.data.byteLength,
     width: processed.info.width,
     height: processed.info.height,

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { ContentStatus } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db";
-import { slugify, slugSchema } from "@/lib/slug";
+import { resolveEntitySlug } from "@/lib/resolve-slug";
 import { contentStatusSchema } from "@/services/posts";
 
 export const faqCategoryInputSchema = z.object({
@@ -21,23 +21,28 @@ export const faqInputSchema = z.object({
 export type FaqInput = z.infer<typeof faqInputSchema>;
 export type FaqCategoryInput = z.infer<typeof faqCategoryInputSchema>;
 
-async function uniqueFaqCategorySlug(base: string, excludeId?: string) {
-  const validated = slugSchema.parse(base || "sss");
-  let candidate = validated;
-  let index = 2;
+async function isFaqCategorySlugTaken(slug: string, excludeId?: string) {
+  const existing = await prisma.faqCategory.findFirst({
+    where: {
+      slug,
+      ...(excludeId ? { NOT: { id: excludeId } } : {}),
+    },
+    select: { id: true },
+  });
+  return Boolean(existing);
+}
 
-  while (true) {
-    const existing = await prisma.faqCategory.findFirst({
-      where: {
-        slug: candidate,
-        ...(excludeId ? { NOT: { id: excludeId } } : {}),
-      },
-      select: { id: true },
-    });
-    if (!existing) return candidate;
-    candidate = `${validated}-${index}`;
-    index += 1;
-  }
+async function resolveFaqCategorySlug(
+  provided: string | null | undefined,
+  name: string,
+  excludeId?: string,
+) {
+  return resolveEntitySlug({
+    provided,
+    fromTitle: name,
+    emptyFallback: "sss",
+    isTaken: (slug) => isFaqCategorySlugTaken(slug, excludeId),
+  });
 }
 
 export async function listFaqCategories() {
@@ -92,9 +97,7 @@ export async function getFaqById(id: string) {
 
 export async function createFaqCategory(raw: FaqCategoryInput) {
   const input = faqCategoryInputSchema.parse(raw);
-  const slug = await uniqueFaqCategorySlug(
-    input.slug?.trim() ? slugify(input.slug) : slugify(input.name),
-  );
+  const slug = await resolveFaqCategorySlug(input.slug, input.name);
 
   return prisma.faqCategory.create({
     data: {

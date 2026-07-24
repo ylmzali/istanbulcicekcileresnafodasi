@@ -1,5 +1,6 @@
 "use client";
 
+import { IstanbulMap } from "@/components/home/istanbul-map";
 import {
   MapPinIcon,
   MaximizeIcon,
@@ -7,6 +8,7 @@ import {
   SearchIcon,
   ShieldCheckIcon,
 } from "@/components/ui/icons";
+import { ISTANBUL_DISTRICT_OPTIONS } from "@/lib/istanbul-districts";
 import { getMessages } from "@/lib/i18n";
 import { routes } from "@/lib/routes";
 import Link from "next/link";
@@ -20,10 +22,14 @@ export function DirectoryMap({ mapTitle }: DirectoryMapProps) {
   const messages = getMessages();
   const containerRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [districtSlug, setDistrictSlug] = useState("");
 
   useEffect(() => {
     const onFullscreenChange = () => {
       setIsFullscreen(document.fullscreenElement === containerRef.current);
+      window.setTimeout(() => {
+        window.dispatchEvent(new Event("resize"));
+      }, 60);
     };
 
     document.addEventListener("fullscreenchange", onFullscreenChange);
@@ -69,11 +75,15 @@ export function DirectoryMap({ mapTitle }: DirectoryMapProps) {
               id="district"
               name="district"
               className="h-11 rounded-[10px] border border-[var(--color-border)] bg-white px-3 text-sm lg:h-9 lg:rounded-[8px] lg:text-[13px]"
-              defaultValue=""
+              value={districtSlug}
+              onChange={(event) => setDistrictSlug(event.target.value)}
             >
-              <option value="" disabled>
-                {messages.directory.district}
-              </option>
+              <option value="">{messages.directory.district}</option>
+              {ISTANBUL_DISTRICT_OPTIONS.map((district) => (
+                <option key={district.slug} value={district.slug}>
+                  {district.name}
+                </option>
+              ))}
             </select>
 
             <label className="sr-only" htmlFor="q">
@@ -100,7 +110,8 @@ export function DirectoryMap({ mapTitle }: DirectoryMapProps) {
 
           <p className="mx-auto mt-3 flex max-w-4xl items-center gap-2 text-xs font-medium text-[var(--color-primary-900)] sm:text-sm lg:mt-2 lg:max-w-none lg:text-[11px]">
             <ShieldCheckIcon className="h-4 w-4 shrink-0 lg:h-3.5 lg:w-3.5" />
-            Yalnızca odaya kayıtlı ve yayına izin vermiş işletmeler listelenir.
+            Yalnızca odaya kayıtlı ve yayına izin vermiş İstanbul işletmeleri
+            listelenir.
           </p>
         </div>
       </div>
@@ -110,16 +121,13 @@ export function DirectoryMap({ mapTitle }: DirectoryMapProps) {
           isFullscreen ? "min-h-0 flex-1" : "min-h-[380px] lg:min-h-[460px]"
         }`}
       >
-        <iframe
+        <IstanbulMap
+          districtSlug={districtSlug}
+          className="absolute inset-0 h-full w-full"
           title={mapTitle}
-          className="absolute inset-0 h-full w-full border-0"
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-          allowFullScreen
-          src="https://www.openstreetmap.org/export/embed.html?bbox=28.65%2C40.90%2C29.35%2C41.25&layer=mapnik&marker=41.037%2C28.985"
         />
 
-        <div className="absolute right-4 bottom-4 z-10 flex items-center gap-2">
+        <div className="absolute right-4 bottom-4 z-[500] flex items-center gap-2">
           <Link
             href={routes.florists}
             className="hidden items-center gap-2 rounded-[12px] bg-white/95 px-3 py-2 text-xs text-[var(--color-text-muted)] shadow-sm ring-1 ring-[var(--color-border)] sm:inline-flex"

@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { adminLoginAction, type AdminLoginState } from "@/app/(admin)/yonetim/actions";
 import { Button } from "@/components/ui/button";
-import { Field, TextInput } from "@/components/admin/form-fields";
+import { Field, FormActionAlert, TextInput } from "@/components/admin/form-fields";
 
 const initialState: AdminLoginState = {};
 
@@ -27,15 +27,6 @@ export function AdminLoginForm({ labels }: AdminLoginFormProps) {
         <p className="mt-1 text-sm text-[var(--color-text-muted)]">{labels.hint}</p>
       </div>
 
-      {state.error ? (
-        <p
-          role="alert"
-          className="rounded-[10px] border border-[var(--color-accent)]/30 bg-[color-mix(in_srgb,var(--color-accent)_8%,white)] px-3 py-2 text-sm text-[var(--color-accent)]"
-        >
-          {state.error}
-        </p>
-      ) : null}
-
       <Field label={labels.username} htmlFor="username">
         <TextInput
           id="username"
@@ -54,6 +45,8 @@ export function AdminLoginForm({ labels }: AdminLoginFormProps) {
           required
         />
       </Field>
+
+      <FormActionAlert error={state.error} />
 
       <Button type="submit" className="w-full" disabled={pending}>
         {labels.submit}

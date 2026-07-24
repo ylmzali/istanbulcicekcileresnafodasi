@@ -3,8 +3,12 @@ import "server-only";
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import { PrismaClient } from "@/generated/prisma/client";
 
+/** Bump after schema/client changes so the cached singleton is recreated in dev. */
+const PRISMA_CLIENT_STAMP = "event-v1-featured-sort";
+
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
+  prismaStamp: string | undefined;
 };
 
 function getMysqlConfig() {
@@ -61,11 +65,23 @@ function createPrismaClient() {
   });
 }
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+function getPrismaClient() {
+  if (
+    globalForPrisma.prisma &&
+    globalForPrisma.prismaStamp === PRISMA_CLIENT_STAMP
+  ) {
+    return globalForPrisma.prisma;
+  }
 
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
+  const client = createPrismaClient();
+  if (process.env.NODE_ENV !== "production") {
+    globalForPrisma.prisma = client;
+    globalForPrisma.prismaStamp = PRISMA_CLIENT_STAMP;
+  }
+  return client;
 }
+
+export const prisma = getPrismaClient();
 
 // Warm the pool once so the first request doesn't pay full connect cost.
 void prisma.$connect().catch(() => undefined);

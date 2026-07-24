@@ -1,34 +1,34 @@
-import { PagePlaceholder } from "@/components/layout/page-placeholder";
-import { routes } from "@/lib/routes";
-import { isValidSlug } from "@/lib/slug";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { PostDetailView } from "@/components/content/post-detail";
+import { postHref } from "@/lib/content-paths";
+import { isValidSlug } from "@/lib/slug";
+import { getPublishedPostBySlug } from "@/services/posts";
 
-type AnnouncementDetailPageProps = {
+type PageProps = {
   params: Promise<{ slug: string }>;
 };
 
-export async function generateMetadata({
-  params,
-}: AnnouncementDetailPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  return { title: isValidSlug(slug) ? `Duyuru · ${slug}` : "Duyuru" };
+  if (!isValidSlug(slug)) return { title: "Duyuru" };
+  const post = await getPublishedPostBySlug(slug);
+  if (!post || post.type !== "announcement") return { title: "Duyuru" };
+  return {
+    title: post.seoTitle || post.title,
+    description: post.seoDescription || post.excerpt || undefined,
+  };
 }
 
-export default async function AnnouncementDetailPage({
-  params,
-}: AnnouncementDetailPageProps) {
+export default async function AnnouncementDetailPage({ params }: PageProps) {
   const { slug } = await params;
   if (!isValidSlug(slug)) notFound();
 
-  return (
-    <PagePlaceholder
-      title="Duyuru detayı"
-      description={`Bu duyuru sayfası hazırlanıyor. Slug: ${slug}`}
-      breadcrumbs={[
-        { label: "Duyurular", href: routes.announcements.root },
-        { label: slug },
-      ]}
-    />
-  );
+  const post = await getPublishedPostBySlug(slug);
+  if (!post) notFound();
+  if (post.type !== "announcement") {
+    redirect(postHref(post.type, post.slug));
+  }
+
+  return <PostDetailView post={post} />;
 }

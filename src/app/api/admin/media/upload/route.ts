@@ -8,7 +8,14 @@ import {
 } from "@/lib/media/presets";
 import { uploadPublicImage } from "@/services/media";
 
-const presetSchema = z.enum(["post-cover", "event-cover"]);
+const presetSchema = z.enum([
+  "post-cover",
+  "event-cover",
+  "hero-desktop",
+  "hero-mobile",
+  "hero-media",
+  "hero-image-link",
+]);
 
 export async function POST(request: Request) {
   const session = await requireAdminSession();

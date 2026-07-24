@@ -1,9 +1,22 @@
 import { CalendarIcon, DownloadIcon } from "@/components/ui/icons";
+import { eventHref } from "@/lib/content-paths";
+import { formatEventDayParts } from "@/lib/datetime";
 import { getMessages } from "@/lib/i18n";
 import { routes } from "@/lib/routes";
 import Link from "next/link";
 
-export function EventsResourcesSection() {
+export type HomeEventItem = {
+  id: string;
+  title: string;
+  slug: string;
+  description: string | null;
+  eventType: string | null;
+  location: string | null;
+  isOnline: boolean;
+  startsAt: Date;
+};
+
+export function EventsResourcesSection({ events }: { events: HomeEventItem[] }) {
   const messages = getMessages();
 
   return (
@@ -25,31 +38,50 @@ export function EventsResourcesSection() {
           </div>
 
           <div className="space-y-3">
-            {[1, 2, 3].map((item) => (
-              <div
-                key={item}
-                className="flex gap-3 rounded-[14px] border border-[var(--color-border)] bg-white p-3"
-              >
-                <div className="flex h-[58px] w-[58px] shrink-0 flex-col items-center justify-center rounded-[12px] bg-[var(--color-primary-800)] text-white">
-                  <span className="text-lg font-bold leading-none">—</span>
-                  <span className="mt-1 text-[10px] uppercase tracking-wide opacity-80">
-                    —
-                  </span>
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-[var(--color-text)]">
-                    {messages.events.empty}
-                  </p>
-                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-                    {messages.common.requiredSoon}
-                  </p>
-                </div>
-              </div>
-            ))}
+            {events.length === 0 ? (
+              <p className="rounded-[14px] border border-dashed border-[var(--color-border)] bg-white px-4 py-8 text-center text-sm text-[var(--color-text-muted)]">
+                {messages.events.empty}
+              </p>
+            ) : (
+              events.map((event) => {
+                const parts = formatEventDayParts(event.startsAt);
+                const meta = [
+                  event.eventType,
+                  event.isOnline ? messages.events.online : event.location,
+                ]
+                  .filter(Boolean)
+                  .join(" · ");
+
+                return (
+                  <Link
+                    key={event.id}
+                    href={eventHref(event.slug)}
+                    className="flex gap-3 rounded-[14px] border border-[var(--color-border)] bg-white p-3 transition hover:border-[var(--color-primary-100)]"
+                  >
+                    <div className="flex h-[58px] w-[58px] shrink-0 flex-col items-center justify-center rounded-[12px] bg-[var(--color-primary-800)] text-white">
+                      <span className="text-lg font-bold leading-none">
+                        {parts.day}
+                      </span>
+                      <span className="mt-1 text-[10px] uppercase tracking-wide opacity-80">
+                        {parts.month}
+                      </span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-[var(--color-text)]">
+                        {event.title}
+                      </p>
+                      <p className="mt-1 line-clamp-2 text-xs text-[var(--color-text-muted)]">
+                        {meta || event.description || messages.events.details}
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })
+            )}
           </div>
 
           <Link
-            href={routes.trainings}
+            href={routes.events.root}
             className="mt-5 inline-flex h-11 items-center justify-center rounded-[10px] bg-[var(--color-primary-800)] px-4 text-sm font-bold text-white hover:bg-[var(--color-primary-700)]"
           >
             {messages.events.calendar}

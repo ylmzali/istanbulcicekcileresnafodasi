@@ -1,25 +1,31 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   deletePostAction,
   savePostAction,
   type ActionState,
 } from "@/app/(admin)/yonetim/content-actions";
+import { ConfirmDeleteButton } from "@/components/admin/confirm-delete-button";
 import { Button } from "@/components/ui/button";
 import {
   AdminFormCard,
   Checkbox,
   Field,
+  FormActionAlert,
   StatusBadge,
   TextInput,
   TextSelect,
   TextTextarea,
 } from "@/components/admin/form-fields";
+import { ImageUploadField } from "@/components/admin/image-upload-field";
+import { SlugInputField } from "@/components/admin/slug-input-field";
+import { CalendarIcon, ClockIcon } from "@/components/ui/icons";
+import { postHref } from "@/lib/content-paths";
 import { buildSeoDescription, buildSeoTitle } from "@/lib/seo";
 import { routes } from "@/lib/routes";
-import { ImageUploadField } from "@/components/admin/image-upload-field";
+import type { PostType } from "@/generated/prisma/client";
 
 type PostFormValues = {
   id?: string;
@@ -40,6 +46,12 @@ type PostFormValues = {
 type Labels = {
   title: string;
   slug: string;
+  slugHint: string;
+  slugChecking: string;
+  slugAvailable: string;
+  slugTaken: string;
+  slugInvalid: string;
+  slugEmptyHint: string;
   excerpt: string;
   content: string;
   status: string;
@@ -48,6 +60,7 @@ type Labels = {
   publishedAt: string;
   expiresAt: string;
   coverImage: string;
+  coverImageHint: string;
   uploadChoose: string;
   uploadChange: string;
   uploadRemove: string;
@@ -62,6 +75,12 @@ type Labels = {
   preview: string;
   previewEmpty: string;
   seoAutoHint: string;
+  postSectionBasic: string;
+  postSectionContent: string;
+  postSectionMedia: string;
+  postSectionSchedule: string;
+  postSectionSeo: string;
+  postViewPublic: string;
   save: string;
   delete: string;
   back: string;
@@ -80,6 +99,28 @@ function toDatetimeLocal(value: string) {
   return local.toISOString().slice(0, 16);
 }
 
+function formatPreviewDateTime(value: string) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("tr-TR", {
+    timeZone: "Europe/Istanbul",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 className="border-b border-[var(--color-border)] pb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-primary-700)]">
+      {children}
+    </h2>
+  );
+}
+
 export function PostForm({
   values,
   labels,
@@ -96,6 +137,11 @@ export function PostForm({
   const [coverImage, setCoverImage] = useState(values.coverImage);
   const [type, setType] = useState(values.type);
   const [status, setStatus] = useState(values.status);
+  const [featured, setFeatured] = useState(values.featured);
+  const [publishedAt, setPublishedAt] = useState(
+    toDatetimeLocal(values.publishedAt),
+  );
+  const [expiresAt, setExpiresAt] = useState(toDatetimeLocal(values.expiresAt));
   const [seoTitle, setSeoTitle] = useState(
     values.seoTitle || buildSeoTitle(values.title),
   );
@@ -121,134 +167,176 @@ export function PostForm({
 
   const previewType = labels.postTypes[type] ?? type;
   const previewStatus = labels.statuses[status] ?? status;
+  const publishedLabel = useMemo(
+    () => formatPreviewDateTime(publishedAt),
+    [publishedAt],
+  );
+  const expiresLabel = useMemo(
+    () => formatPreviewDateTime(expiresAt),
+    [expiresAt],
+  );
+
+  const publicHref =
+    values.id && values.slug && status === "published"
+      ? postHref(type as PostType, values.slug)
+      : null;
 
   return (
     <form action={formAction} className="space-y-3">
-      {state.error ? (
-        <p role="alert" className="text-sm text-[var(--color-accent)]">
-          {state.error}
-        </p>
-      ) : null}
-      {state.success ? (
-        <p className="text-sm text-[var(--color-primary-800)]">Kaydedildi.</p>
-      ) : null}
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(280px,360px)]">
+        <div className="space-y-4">
+          <AdminFormCard className="space-y-4">
+            <SectionTitle>{labels.postSectionBasic}</SectionTitle>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(280px,380px)]">
-        <AdminFormCard className="space-y-3">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label={labels.type} htmlFor="type">
-              <TextSelect
-                id="type"
-                name="type"
-                value={type}
-                onChange={(event) => setType(event.target.value)}
-                required
-              >
-                {Object.entries(labels.postTypes).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </TextSelect>
-            </Field>
-            <Field label={labels.status} htmlFor="status">
-              <TextSelect
-                id="status"
-                name="status"
-                value={status}
-                onChange={(event) => setStatus(event.target.value)}
-                required
-              >
-                {Object.entries(labels.statuses).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </TextSelect>
-            </Field>
-          </div>
-
-          <Field label={labels.title} htmlFor="title">
-            <TextInput
-              id="title"
-              name="title"
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              required
-            />
-          </Field>
-
-          <Field label={labels.slug} htmlFor="slug" hint="Boş bırakılırsa başlıktan üretilir.">
-            <TextInput id="slug" name="slug" defaultValue={values.slug} />
-          </Field>
-
-          <Field label={labels.excerpt} htmlFor="excerpt">
-            <TextTextarea
-              id="excerpt"
-              name="excerpt"
-              value={excerpt}
-              onChange={(event) => setExcerpt(event.target.value)}
-              rows={3}
-            />
-          </Field>
-
-          <Field label={labels.content} htmlFor="content">
-            <TextTextarea
-              id="content"
-              name="content"
-              value={content}
-              onChange={(event) => setContent(event.target.value)}
-              rows={8}
-              className="min-h-28"
-            />
-          </Field>
-
-          <ImageUploadField
-            name="coverImage"
-            label={labels.coverImage}
-            value={coverImage}
-            onChange={setCoverImage}
-            preset="post-cover"
-            labels={{
-              choose: labels.uploadChoose,
-              change: labels.uploadChange,
-              remove: labels.uploadRemove,
-              cropTitle: labels.uploadCropTitle,
-              cropConfirm: labels.uploadCropConfirm,
-              cropCancel: labels.uploadCropCancel,
-              uploading: labels.uploadUploading,
-              error: labels.uploadError,
-              zoom: labels.uploadZoom,
-            }}
-          />
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label={labels.publishedAt} htmlFor="publishedAt">
+            <Field label={labels.title} htmlFor="title" size="xl">
               <TextInput
-                id="publishedAt"
-                name="publishedAt"
-                type="datetime-local"
-                defaultValue={toDatetimeLocal(values.publishedAt)}
+                id="title"
+                name="title"
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                required
               />
             </Field>
-            <Field label={labels.expiresAt} htmlFor="expiresAt">
-              <TextInput
-                id="expiresAt"
-                name="expiresAt"
-                type="datetime-local"
-                defaultValue={toDatetimeLocal(values.expiresAt)}
+
+            <div className="flex flex-wrap gap-3">
+              <Field label={labels.type} htmlFor="type" size="md">
+                <TextSelect
+                  id="type"
+                  name="type"
+                  value={type}
+                  onChange={(event) => setType(event.target.value)}
+                  required
+                >
+                  {Object.entries(labels.postTypes).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </TextSelect>
+              </Field>
+              <Field label={labels.status} htmlFor="status" size="md">
+                <TextSelect
+                  id="status"
+                  name="status"
+                  value={status}
+                  onChange={(event) => setStatus(event.target.value)}
+                  required
+                >
+                  {Object.entries(labels.statuses).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </TextSelect>
+              </Field>
+              <SlugInputField
+                defaultValue={values.slug}
+                scope="post"
+                excludeId={values.id}
+                size="lg"
+                labels={{
+                  label: labels.slug,
+                  hint: labels.slugHint,
+                  checking: labels.slugChecking,
+                  available: labels.slugAvailable,
+                  taken: labels.slugTaken,
+                  invalid: labels.slugInvalid,
+                  emptyHint: labels.slugEmptyHint,
+                }}
+              />
+            </div>
+
+            <Checkbox
+              id="featured"
+              name="featured"
+              label={labels.featured}
+              checked={featured}
+              onChange={(event) => setFeatured(event.target.checked)}
+            />
+          </AdminFormCard>
+
+          <AdminFormCard className="space-y-4">
+            <SectionTitle>{labels.postSectionContent}</SectionTitle>
+
+            <Field label={labels.excerpt} htmlFor="excerpt" size="xl">
+              <TextTextarea
+                id="excerpt"
+                name="excerpt"
+                value={excerpt}
+                onChange={(event) => setExcerpt(event.target.value)}
+                rows={3}
               />
             </Field>
-          </div>
 
-          <Checkbox
-            name="featured"
-            label={labels.featured}
-            defaultChecked={values.featured}
-          />
+            <Field label={labels.content} htmlFor="content" size="xl">
+              <TextTextarea
+                id="content"
+                name="content"
+                value={content}
+                onChange={(event) => setContent(event.target.value)}
+                rows={10}
+                className="min-h-40"
+              />
+            </Field>
+          </AdminFormCard>
 
-          <div className="grid gap-3 border-t border-[var(--color-border)] pt-3 sm:grid-cols-2">
-            <Field label={labels.seoTitle} htmlFor="seoTitle" hint={labels.seoAutoHint}>
+          <AdminFormCard className="space-y-4">
+            <SectionTitle>{labels.postSectionMedia}</SectionTitle>
+            <ImageUploadField
+              name="coverImage"
+              label={labels.coverImage}
+              value={coverImage}
+              onChange={setCoverImage}
+              preset="post-cover"
+              hint={labels.coverImageHint}
+              labels={{
+                choose: labels.uploadChoose,
+                change: labels.uploadChange,
+                remove: labels.uploadRemove,
+                cropTitle: labels.uploadCropTitle,
+                cropConfirm: labels.uploadCropConfirm,
+                cropCancel: labels.uploadCropCancel,
+                uploading: labels.uploadUploading,
+                error: labels.uploadError,
+                zoom: labels.uploadZoom,
+              }}
+            />
+          </AdminFormCard>
+
+          <AdminFormCard className="space-y-4">
+            <SectionTitle>{labels.postSectionSchedule}</SectionTitle>
+
+            <div className="flex flex-wrap gap-3">
+              <Field label={labels.publishedAt} htmlFor="publishedAt" size="lg">
+                <TextInput
+                  id="publishedAt"
+                  name="publishedAt"
+                  type="datetime-local"
+                  value={publishedAt}
+                  onChange={(event) => setPublishedAt(event.target.value)}
+                />
+              </Field>
+              <Field label={labels.expiresAt} htmlFor="expiresAt" size="lg">
+                <TextInput
+                  id="expiresAt"
+                  name="expiresAt"
+                  type="datetime-local"
+                  value={expiresAt}
+                  onChange={(event) => setExpiresAt(event.target.value)}
+                />
+              </Field>
+            </div>
+          </AdminFormCard>
+
+          <AdminFormCard className="space-y-4">
+            <SectionTitle>{labels.postSectionSeo}</SectionTitle>
+
+            <Field
+              label={labels.seoTitle}
+              htmlFor="seoTitle"
+              size="xl"
+              hint={labels.seoAutoHint}
+            >
               <TextInput
                 id="seoTitle"
                 name="seoTitle"
@@ -259,7 +347,11 @@ export function PostForm({
                 }}
               />
             </Field>
-            <Field label={labels.seoDescription} htmlFor="seoDescription">
+            <Field
+              label={labels.seoDescription}
+              htmlFor="seoDescription"
+              size="xl"
+            >
               <TextTextarea
                 id="seoDescription"
                 name="seoDescription"
@@ -271,30 +363,31 @@ export function PostForm({
                 rows={3}
               />
             </Field>
-          </div>
+          </AdminFormCard>
 
-          <div className="flex flex-wrap gap-2 pt-1">
-            <Button type="submit" size="sm" disabled={pending}>
-              {labels.save}
-            </Button>
-            <Link
-              href={routes.admin.posts}
-              className="inline-flex h-9 items-center rounded-lg border border-[var(--color-border)] px-3 text-sm"
-            >
-              {labels.back}
-            </Link>
-            {values.id ? (
-              <Button
-                type="submit"
-                size="sm"
-                variant="danger"
-                formAction={deletePostAction.bind(null, values.id)}
-              >
-                {labels.delete}
-              </Button>
-            ) : null}
-          </div>
-        </AdminFormCard>
+          <AdminFormCard>
+            <FormActionAlert error={state.error} success={state.success} />
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap gap-2">
+                <Button type="submit" size="sm" disabled={pending}>
+                  {labels.save}
+                </Button>
+                <Link
+                  href={routes.admin.posts}
+                  className="inline-flex h-9 items-center rounded-lg border border-[var(--color-border)] px-3 text-sm"
+                >
+                  {labels.back}
+                </Link>
+              </div>
+              {values.id ? (
+                <ConfirmDeleteButton
+                  label={labels.delete}
+                  action={deletePostAction.bind(null, values.id)}
+                />
+              ) : null}
+            </div>
+          </AdminFormCard>
+        </div>
 
         <aside className="xl:sticky xl:top-4 xl:self-start">
           <AdminFormCard className="space-y-3">
@@ -302,7 +395,14 @@ export function PostForm({
               <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
                 {labels.preview}
               </p>
-              <StatusBadge label={previewStatus} />
+              <div className="flex flex-wrap items-center justify-end gap-1.5">
+                {featured ? (
+                  <span className="rounded-md bg-[var(--color-primary-100)] px-2 py-0.5 text-[11px] font-medium text-[var(--color-primary-800)]">
+                    {labels.featured}
+                  </span>
+                ) : null}
+                <StatusBadge label={previewStatus} />
+              </div>
             </div>
 
             {coverImage ? (
@@ -310,10 +410,10 @@ export function PostForm({
               <img
                 src={coverImage}
                 alt=""
-                className="h-36 w-full rounded-lg object-cover"
+                className="aspect-[16/9] w-full rounded-lg bg-[var(--color-surface-soft)] object-contain"
               />
             ) : (
-              <div className="flex h-28 items-center justify-center rounded-lg bg-[var(--color-surface-soft)] text-xs text-[var(--color-text-muted)]">
+              <div className="flex aspect-[16/9] items-center justify-center rounded-lg bg-[var(--color-surface-soft)] text-xs text-[var(--color-text-muted)]">
                 Kapak yok
               </div>
             )}
@@ -327,24 +427,51 @@ export function PostForm({
             </h2>
 
             {excerpt.trim() ? (
-              <p className="text-sm leading-relaxed text-[var(--color-text-muted)]">
+              <p className="line-clamp-4 text-sm leading-relaxed text-[var(--color-text-muted)]">
                 {excerpt}
               </p>
-            ) : null}
-
-            {content.trim() ? (
-              <div className="whitespace-pre-wrap border-t border-[var(--color-border)] pt-3 text-sm leading-relaxed text-[var(--color-text)]">
-                {content}
-              </div>
             ) : (
               <p className="text-sm text-[var(--color-text-muted)]">
                 {labels.previewEmpty}
               </p>
             )}
 
+            <ul className="space-y-2 border-t border-[var(--color-border)] pt-3 text-sm text-[var(--color-text)]">
+              {publishedLabel ? (
+                <li className="flex items-start gap-2">
+                  <CalendarIcon className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-primary-700)]" />
+                  <span>
+                    <span className="text-[var(--color-text-muted)]">
+                      {labels.publishedAt}:{" "}
+                    </span>
+                    {publishedLabel}
+                  </span>
+                </li>
+              ) : (
+                <li className="flex items-center gap-2 text-[var(--color-text-muted)]">
+                  <ClockIcon className="h-4 w-4 shrink-0" />
+                  <span>{labels.publishedAt}</span>
+                </li>
+              )}
+              {expiresLabel ? (
+                <li className="flex items-start gap-2">
+                  <ClockIcon className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-primary-700)]" />
+                  <span>
+                    <span className="text-[var(--color-text-muted)]">
+                      {labels.expiresAt}:{" "}
+                    </span>
+                    {expiresLabel}
+                  </span>
+                </li>
+              ) : null}
+            </ul>
+
             {(seoTitle || seoDescription) && (
               <div className="rounded-lg bg-[var(--color-surface-soft)] p-3">
-                <p className="truncate text-sm font-medium text-[#1a0dab]">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+                  SEO
+                </p>
+                <p className="mt-1 truncate text-sm font-medium text-[#1a0dab]">
                   {seoTitle || "—"}
                 </p>
                 <p className="mt-1 line-clamp-3 text-xs leading-5 text-[var(--color-text-muted)]">
@@ -352,6 +479,17 @@ export function PostForm({
                 </p>
               </div>
             )}
+
+            {publicHref ? (
+              <Link
+                href={publicHref}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-9 items-center justify-center rounded-lg border border-[var(--color-border)] px-3 text-sm font-medium text-[var(--color-primary-800)] hover:bg-[var(--color-surface-soft)]"
+              >
+                {labels.postViewPublic} →
+              </Link>
+            ) : null}
           </AdminFormCard>
         </aside>
       </div>

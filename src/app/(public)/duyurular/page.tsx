@@ -1,14 +1,17 @@
-import { PagePlaceholder } from "@/components/layout/page-placeholder";
 import type { Metadata } from "next";
+import { PostsBrowsePage } from "@/components/content/posts-browse";
 
-export const metadata: Metadata = { title: "Duyurular" };
+type PageProps = {
+  searchParams: Promise<{ page?: string }>;
+};
 
-export default function AnnouncementsPage() {
-  return (
-    <PagePlaceholder
-      title="Duyurular"
-      description="Oda duyuruları bu bölümde listelenecektir."
-      breadcrumbs={[{ label: "Duyurular" }]}
-    />
-  );
+export const metadata: Metadata = {
+  title: "Duyurular",
+  description: "İstanbul Çiçekçiler Esnaf Odası duyuruları.",
+};
+
+export default async function AnnouncementsPage({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const page = Math.max(1, Number(params.page) || 1);
+  return <PostsBrowsePage filter="announcement" page={page} />;
 }

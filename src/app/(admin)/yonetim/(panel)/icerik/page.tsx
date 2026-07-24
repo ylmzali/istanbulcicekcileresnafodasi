@@ -7,7 +7,12 @@ import type { ContentStatus, PostType } from "@/generated/prisma/client";
 import { getSearchParam, parseAdminTableQuery } from "@/lib/admin-table";
 import { getMessages } from "@/lib/i18n";
 import { routes } from "@/lib/routes";
-import { listPosts, postTypeSchema, contentStatusSchema } from "@/services/posts";
+import {
+  listFeaturedPostIds,
+  listPosts,
+  postTypeSchema,
+  contentStatusSchema,
+} from "@/services/posts";
 
 export const metadata: Metadata = {
   title: "Haber & Duyuru",
@@ -32,23 +37,36 @@ export default async function AdminPostsPage({ searchParams }: PageProps) {
     ? (statusRaw as ContentStatus)
     : undefined;
 
-  const result = await listPosts({
-    q: q || undefined,
-    type,
-    status,
-    page: tableQuery.page,
-    pageSize: tableQuery.pageSize,
-  });
+  const [result, featuredIds] = await Promise.all([
+    listPosts({
+      q: q || undefined,
+      type,
+      status,
+      page: tableQuery.page,
+      pageSize: tableQuery.pageSize,
+    }),
+    listFeaturedPostIds(),
+  ]);
 
-  const tableRows = result.rows.map((post) => ({
-    id: post.id,
-    title: post.title,
-    slug: post.slug,
-    type: post.type,
-    typeLabel: a.postTypes[post.type],
-    status: post.status,
-    statusLabel: a.statuses[post.status],
-  }));
+  const tableRows = result.rows.map((post) => {
+    const featuredIndex = featuredIds.indexOf(post.id);
+    return {
+      id: post.id,
+      title: post.title,
+      slug: post.slug,
+      type: post.type,
+      typeLabel: a.postTypes[post.type],
+      status: post.status,
+      statusLabel: a.statuses[post.status],
+      featured: post.featured,
+      sortOrder: post.sortOrder,
+      canMoveUp: post.featured && featuredIndex > 0,
+      canMoveDown:
+        post.featured &&
+        featuredIndex >= 0 &&
+        featuredIndex < featuredIds.length - 1,
+    };
+  });
 
   return (
     <div>
@@ -78,6 +96,10 @@ export default async function AdminPostsPage({ searchParams }: PageProps) {
           title: a.title,
           type: a.type,
           status: a.status,
+          featured: a.featured,
+          sortOrder: a.sortOrder,
+          moveUp: a.moveUp,
+          moveDown: a.moveDown,
           edit: a.edit,
         }}
         typeOptions={Object.entries(a.postTypes).map(([value, label]) => ({

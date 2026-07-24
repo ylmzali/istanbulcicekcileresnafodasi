@@ -4,15 +4,20 @@ import { revalidatePath } from "next/cache";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { redirect } from "next/navigation";
 import { requireAdminSession } from "@/lib/auth/session";
+import { slugErrorMessage } from "@/lib/resolve-slug";
 import { routes } from "@/lib/routes";
 import {
   createPost,
+  movePostSort,
+  setPostFeatured,
   softDeletePost,
   updatePost,
   type PostInput,
 } from "@/services/posts";
 import {
   createEvent,
+  moveEventSort,
+  setEventFeatured,
   softDeleteEvent,
   updateEvent,
   type EventInput,
@@ -24,6 +29,14 @@ import {
   updateFaq,
   type FaqInput,
 } from "@/services/faqs";
+import {
+  createBanner,
+  deleteBanner,
+  moveBannerSort,
+  setBannerActive,
+  updateBanner,
+  type BannerInput,
+} from "@/services/banners";
 
 export type ActionState = {
   error?: string;
@@ -89,10 +102,20 @@ export async function savePostAction(
       redirect(routes.admin.postEdit(created.id));
     }
     revalidatePath(routes.admin.posts);
+    revalidatePath(routes.home);
+    revalidatePath(routes.news.root);
+    revalidatePath(routes.news.chamber);
+    revalidatePath(routes.news.sector);
+    revalidatePath(routes.announcements.root);
     return { success: true };
   } catch (error) {
     rethrowRedirect(error);
-    return { error: "İçerik kaydedilemedi. Alanları kontrol edin." };
+    return {
+      error: slugErrorMessage(
+        error,
+        "İçerik kaydedilemedi. Alanları kontrol edin.",
+      ),
+    };
   }
 }
 
@@ -105,6 +128,35 @@ export async function deletePostAction(id: string) {
   }
   revalidatePath(routes.admin.posts);
   redirect(routes.admin.posts);
+}
+
+export async function setPostFeaturedAction(id: string, featured: boolean) {
+  await assertAdmin();
+  try {
+    await setPostFeatured(id, featured);
+  } catch {
+    return;
+  }
+  revalidatePath(routes.admin.posts);
+  revalidatePath(routes.home);
+  revalidatePath(routes.news.root);
+  revalidatePath(routes.news.chamber);
+  revalidatePath(routes.news.sector);
+  revalidatePath(routes.announcements.root);
+}
+
+export async function movePostSortAction(
+  id: string,
+  direction: "up" | "down",
+) {
+  await assertAdmin();
+  try {
+    await movePostSort(id, direction);
+  } catch {
+    return;
+  }
+  revalidatePath(routes.admin.posts);
+  revalidatePath(routes.home);
 }
 
 export async function saveEventAction(
@@ -129,6 +181,7 @@ export async function saveEventAction(
     registrationOpen: nullable(formData, "registrationOpen"),
     registrationClose: nullable(formData, "registrationClose"),
     status: str(formData, "status") as EventInput["status"],
+    featured: boolFromForm(formData.get("featured")),
     coverImage: nullable(formData, "coverImage"),
   };
 
@@ -138,14 +191,50 @@ export async function saveEventAction(
     } else {
       const created = await createEvent(input);
       revalidatePath(routes.admin.events);
+      revalidatePath(routes.events.root);
+      revalidatePath(routes.home);
       redirect(routes.admin.eventEdit(created.id));
     }
     revalidatePath(routes.admin.events);
+    revalidatePath(routes.events.root);
+    revalidatePath(routes.home);
     return { success: true };
   } catch (error) {
     rethrowRedirect(error);
-    return { error: "Etkinlik kaydedilemedi. Alanları kontrol edin." };
+    return {
+      error: slugErrorMessage(
+        error,
+        "Etkinlik kaydedilemedi. Alanları kontrol edin.",
+      ),
+    };
   }
+}
+
+export async function setEventFeaturedAction(id: string, featured: boolean) {
+  await assertAdmin();
+  try {
+    await setEventFeatured(id, featured);
+  } catch {
+    return;
+  }
+  revalidatePath(routes.admin.events);
+  revalidatePath(routes.events.root);
+  revalidatePath(routes.home);
+}
+
+export async function moveEventSortAction(
+  id: string,
+  direction: "up" | "down",
+) {
+  await assertAdmin();
+  try {
+    await moveEventSort(id, direction);
+  } catch {
+    return;
+  }
+  revalidatePath(routes.admin.events);
+  revalidatePath(routes.events.root);
+  revalidatePath(routes.home);
 }
 
 export async function deleteEventAction(id: string) {
@@ -214,7 +303,88 @@ export async function createFaqCategoryAction(
     });
     revalidatePath(routes.admin.faqs);
     return { success: true };
-  } catch {
-    return { error: "Kategori eklenemedi." };
+  } catch (error) {
+    return { error: slugErrorMessage(error, "Kategori eklenemedi.") };
   }
+}
+
+export async function saveBannerAction(
+  id: string | null,
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  await assertAdmin();
+
+  const input: BannerInput = {
+    variant: str(formData, "variant") as BannerInput["variant"],
+    eyebrow: nullable(formData, "eyebrow"),
+    title: str(formData, "title"),
+    description: nullable(formData, "description"),
+    imageKey: nullable(formData, "imageKey"),
+    mobileImageKey: nullable(formData, "mobileImageKey"),
+    primaryCtaLabel: nullable(formData, "primaryCtaLabel"),
+    primaryCtaHref: nullable(formData, "primaryCtaHref"),
+    primaryCtaNewTab: boolFromForm(formData.get("primaryCtaNewTab")),
+    secondaryCtaLabel: nullable(formData, "secondaryCtaLabel"),
+    secondaryCtaHref: nullable(formData, "secondaryCtaHref"),
+    secondaryCtaNewTab: boolFromForm(formData.get("secondaryCtaNewTab")),
+    sortOrder: Number(str(formData, "sortOrder") || 0),
+    active: boolFromForm(formData.get("active")),
+    startsAt: nullable(formData, "startsAt"),
+    endsAt: nullable(formData, "endsAt"),
+  };
+
+  try {
+    if (id) {
+      await updateBanner(id, input);
+    } else {
+      const created = await createBanner(input);
+      revalidatePath(routes.admin.banners);
+      revalidatePath(routes.home);
+      redirect(routes.admin.bannerEdit(created.id));
+    }
+    revalidatePath(routes.admin.banners);
+    revalidatePath(routes.home);
+    return { success: true };
+  } catch (error) {
+    rethrowRedirect(error);
+    return { error: "Hero slaytı kaydedilemedi. Alanları kontrol edin." };
+  }
+}
+
+export async function deleteBannerAction(id: string) {
+  await assertAdmin();
+  try {
+    await deleteBanner(id);
+  } catch {
+    return;
+  }
+  revalidatePath(routes.admin.banners);
+  revalidatePath(routes.home);
+  redirect(routes.admin.banners);
+}
+
+export async function moveBannerSortAction(
+  id: string,
+  direction: "up" | "down",
+) {
+  await assertAdmin();
+  try {
+    await moveBannerSort(id, direction);
+  } catch {
+    return;
+  }
+  revalidatePath(routes.admin.banners);
+  revalidatePath(routes.home);
+}
+
+export async function setBannerActiveAction(id: string, active: boolean) {
+  await assertAdmin();
+  try {
+    await setBannerActive(id, active);
+  } catch {
+    return;
+  }
+  revalidatePath(routes.admin.banners);
+  revalidatePath(routes.home);
 }
