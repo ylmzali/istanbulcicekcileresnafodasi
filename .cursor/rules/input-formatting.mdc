@@ -1,0 +1,44 @@
+---
+description: Strict form input formatting, character filters, and length limits for all form fields
+alwaysApply: true
+---
+
+# Form input formatting (zorunlu)
+
+Tüm form elemanlarında kullanım amacına göre **karakter filtreleme**, **maxLength**, **inputMode/type** ve sunucu doğrulaması birlikte uygulanır.
+
+## Kaynak
+
+- Format profilleri: `src/lib/input-formats.ts` (`InputFormatId`, `INPUT_FORMATS`)
+- UI: `TextInput` / `TextTextarea` üzerinde `format="…"` prop’u (`src/components/admin/form-fields.tsx`)
+- Sunucu: Zod + normalize (örn. `normalizePhoneTr`, `normalizeIdentityNo`) — istemci filtre UX içindir, güvenlik için yeterli değildir
+
+## Kural
+
+1. Yeni alan eklerken uygun `format` seç; serbest `TextInput` bırakma.
+2. Filtrelemeyi alanın `onChange` içinde yeniden yazma; `format` prop’unu kullan.
+3. Yazarken `filter`, odaktan çıkınca `format` uygulanır (TextInput/TextTextarea).
+4. Telefon: boş değilse zorunlu baştaki `0` + `0532 123 45 67` gruplama; sunucuya `toStorage` ile yalnızca rakam.
+5. Para: UI’da binlik `,` + kuruş `.` (`1,234.50` / gösterimde `₺1,234.50` via `formatMoney`). Sunucu `moneyToStorage` / `parseMoneyNumber` → `1234.50`. DB’de `DECIMAL(12,2)` (binlik ayraç yok).
+6. E-posta küçük harf; URL’de şema yoksa `https://` eklenir; ad/soyad TR büyük harf.
+7. Public formlar da aynı profilleri kullanmalı.
+8. Tarih alanları native `type="date"` / `datetime-local` kalır.
+9. Rich içerik = `articleBody`; özet = `excerpt`; kısa not = `note`.
+
+## Yaygın formatlar
+
+| Amaç | format |
+| --- | --- |
+| T.C. kimlik | `identityNo` |
+| Vergi no | `taxNo` |
+| Telefon | `phoneTr` |
+| E-posta | `email` |
+| Para (TRY) | `money` |
+| Slug / dönem anahtarı | `slug` |
+| Ad / soyad | `personName` |
+| Başlık | `title` |
+| Adres | `address` / `addressLong` |
+| Posta kodu | `postalCode` |
+| Tahsilat ID | `collectionRef` |
+| Üye no | `memberNo` |
+| Sıra / yıl / tam sayı | `sortOrder` / `year` / `integer` |

@@ -4,7 +4,7 @@ import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import { PrismaClient } from "@/generated/prisma/client";
 
 /** Bump after schema/client changes so the cached singleton is recreated in dev. */
-const PRISMA_CLIENT_STAMP = "event-v1-featured-sort";
+const PRISMA_CLIENT_STAMP = "member-auth-v1-identity-hash";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;

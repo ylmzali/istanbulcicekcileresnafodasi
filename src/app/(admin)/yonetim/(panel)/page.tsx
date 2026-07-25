@@ -27,8 +27,7 @@ export default async function AdminDashboardPage() {
   const cards = [
     { label: a.stats.pendingApplications, value: stats.pendingApplications },
     { label: a.stats.missingDocuments, value: stats.missingDocumentApplications },
-    { label: a.stats.pendingDocuments, value: stats.pendingDocumentRequests },
-    { label: a.stats.todaysAppointments, value: stats.todaysAppointments },
+    { label: a.stats.newContactSubmissions, value: stats.newContactSubmissions },
     { label: a.stats.openSupport, value: stats.openSupportRequests },
     { label: a.stats.overdueDues, value: stats.overdueDues },
   ];

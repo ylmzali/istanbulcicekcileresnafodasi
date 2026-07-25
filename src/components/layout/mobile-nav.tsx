@@ -10,7 +10,7 @@ import { routes } from "@/lib/routes";
 import { publicNav } from "@/lib/site";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type MobileNavProps = {
   labels: Record<string, string>;
@@ -25,6 +25,48 @@ export function MobileNav({
 }: MobileNavProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const scrollY = window.scrollY;
+    const { body } = document;
+    const previous = {
+      position: body.style.position,
+      top: body.style.top,
+      left: body.style.left,
+      right: body.style.right,
+      width: body.style.width,
+      overflow: body.style.overflow,
+    };
+
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.left = "0";
+    body.style.right = "0";
+    body.style.width = "100%";
+    body.style.overflow = "hidden";
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      body.style.position = previous.position;
+      body.style.top = previous.top;
+      body.style.left = previous.left;
+      body.style.right = previous.right;
+      body.style.width = previous.width;
+      body.style.overflow = previous.overflow;
+      document.removeEventListener("keydown", onKeyDown);
+      window.scrollTo(0, scrollY);
+    };
+  }, [open]);
 
   return (
     <div className="lg:hidden">
@@ -42,7 +84,7 @@ export function MobileNav({
       {open ? (
         <div
           id="mobile-menu"
-          className="absolute top-full right-0 left-0 z-50 border-b border-[var(--color-border)] bg-white shadow-lg"
+          className="absolute top-full right-0 left-0 z-50 max-h-[calc(100dvh-5.75rem)] overflow-y-auto overscroll-y-contain border-b border-[var(--color-border)] bg-white shadow-lg"
         >
           <nav className="mx-auto max-w-[1280px] space-y-1 px-4 py-4 sm:px-6">
             {publicNav.map((item) => {

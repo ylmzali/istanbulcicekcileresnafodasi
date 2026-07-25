@@ -13,7 +13,7 @@ import {
   ImageIcon,
   LayoutDashboardIcon,
   LogOutIcon,
-  MapPinIcon,
+  MailIcon,
   MenuIcon,
   MessageIcon,
   NewspaperIcon,
@@ -54,13 +54,12 @@ const iconByHref: Record<string, React.ComponentType<{ className?: string }>> = 
   [routes.admin.events]: CalendarIcon,
   [routes.admin.faqs]: HelpCircleIcon,
   [routes.admin.banners]: ImageIcon,
+  [routes.admin.resources]: FileCheckIcon,
   [routes.admin.members]: UsersIcon,
   [routes.admin.applications]: ClipboardIcon,
-  [routes.admin.documentRequests]: FileCheckIcon,
   [routes.admin.dues]: WalletIcon,
-  [routes.admin.appointments]: CalendarIcon,
+  [routes.admin.contactSubmissions]: MailIcon,
   [routes.admin.support]: MessageIcon,
-  [routes.admin.florists]: MapPinIcon,
 };
 
 function isActive(pathname: string, href: string) {

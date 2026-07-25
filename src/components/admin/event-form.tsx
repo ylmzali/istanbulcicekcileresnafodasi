@@ -167,6 +167,7 @@ export function EventForm({
 
             <Field label={labels.title} htmlFor="title" size="xl">
               <TextInput
+                  format="title"
                 id="title"
                 name="title"
                 value={title}
@@ -219,6 +220,7 @@ export function EventForm({
 
             <Field label={labels.content} htmlFor="description" size="xl">
               <TextTextarea
+                  format="multiline"
                 id="description"
                 name="description"
                 value={description}
@@ -261,6 +263,7 @@ export function EventForm({
               </Field>
               <Field label={labels.capacity} htmlFor="capacity" size="sm">
                 <TextInput
+                  format="integer"
                   id="capacity"
                   name="capacity"
                   type="number"
@@ -325,6 +328,7 @@ export function EventForm({
                 <input type="hidden" name="onlineUrl" value="" />
                 <Field label={labels.location} htmlFor="location" size="xl">
                   <TextInput
+                  format="address"
                     id="location"
                     name="location"
                     value={location}

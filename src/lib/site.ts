@@ -22,6 +22,38 @@ export const siteConfig = {
   phoneHref: "tel:+902122372250",
   email: "istanbulcicekcilerodasi@gmail.com",
   address: "Tarlabaşı Bulvarı No: 232 K: 1 Beyoğlu / İstanbul",
+  workingHours: [
+    { days: "Pazartesi – Cuma", hours: "09:00 – 17:00" },
+    { days: "Cumartesi", hours: "09:00 – 13:00" },
+    { days: "Pazar", hours: "Kapalı" },
+  ],
+  departments: [
+    {
+      name: "Üye İşlemleri",
+      description: "Üyelik, belge talebi ve kayıt işlemleri",
+      phoneDisplay: "0212 237 22 50",
+      phoneHref: "tel:+902122372250",
+    },
+    {
+      name: "Muhasebe / Aidat",
+      description: "Aidat tahakkuk ve tahsilat bilgilendirmesi",
+      phoneDisplay: "0212 237 22 50",
+      phoneHref: "tel:+902122372250",
+    },
+    {
+      name: "Genel Sekreterlik",
+      description: "Kurumsal yazışma ve resmi bildirimler",
+      phoneDisplay: "0212 237 22 50",
+      phoneHref: "tel:+902122372250",
+    },
+  ],
+  map: {
+    /** Approximate office location for OSM embed (no API key). */
+    lat: 41.0369,
+    lng: 28.9784,
+    googleMapsUrl:
+      "https://www.google.com/maps/search/?api=1&query=Tarlaba%C5%9F%C4%B1+Bulvar%C4%B1+No%3A+232+Beyo%C4%9Flu+%C4%B0stanbul",
+  },
   istanbulDistrictCount: 39,
   social: {
     instagram: "https://www.instagram.com/istanbulcicekcileresnafodasi",
@@ -85,7 +117,6 @@ export const publicNav = [
       { href: routes.membership.root, label: "Üyelik Koşulları" },
       { href: routes.membership.apply, label: "Üyelik Başvurusu" },
       { href: routes.membership.dues, label: "Aidat Sorgulama" },
-      { href: routes.documentVerification, label: "Evrak Doğrulama" },
     ],
   },
   { href: routes.legislation, labelKey: "legislation" as const, children: null },

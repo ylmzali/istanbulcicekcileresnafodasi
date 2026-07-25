@@ -36,6 +36,18 @@ async function isTaken(
     return Boolean(row);
   }
 
+  if (scope === "resource") {
+    const row = await prisma.resource.findFirst({
+      where: {
+        slug,
+        deletedAt: null,
+        ...(excludeId ? { NOT: { id: excludeId } } : {}),
+      },
+      select: { id: true },
+    });
+    return Boolean(row);
+  }
+
   const row = await prisma.faqCategory.findFirst({
     where: {
       slug,

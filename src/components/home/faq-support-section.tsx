@@ -1,11 +1,30 @@
+import Link from "next/link";
+import {
+  FaqAccordion,
+  FaqViewAllLink,
+} from "@/components/content/faq-accordion";
 import { PhoneIcon, UserIcon } from "@/components/ui/icons";
 import { getMessages } from "@/lib/i18n";
 import { routes } from "@/lib/routes";
 import { siteConfig } from "@/lib/site";
-import Link from "next/link";
+import { listPublishedFaqs } from "@/services/faqs";
 
-export function FaqSupportSection() {
+export async function FaqSupportSection() {
   const messages = getMessages();
+  const published = await listPublishedFaqs({ limit: 6 });
+
+  const items =
+    published.length > 0
+      ? published.map((item) => ({
+          id: item.id,
+          question: item.question,
+          answer: item.answer,
+        }))
+      : messages.faq.items.map((item, index) => ({
+          id: `fallback-${index}`,
+          question: item.question,
+          answer: item.answer,
+        }));
 
   return (
     <section className="border-b border-[var(--color-border)] bg-[var(--color-surface-soft)] py-14">
@@ -14,26 +33,24 @@ export function FaqSupportSection() {
           <h2 className="text-2xl font-bold text-[var(--color-text)] sm:text-3xl">
             {messages.faq.title}
           </h2>
-          <div className="mt-6 divide-y divide-[var(--color-border)] rounded-[18px] border border-[var(--color-border)] bg-white">
-            {messages.faq.items.map((item) => (
-              <details
-                key={item.question}
-                className="group px-5 py-4"
-              >
-                <summary className="cursor-pointer list-none text-sm font-semibold text-[var(--color-text)]">
-                  <span className="flex items-center justify-between gap-4">
-                    {item.question}
-                    <span className="text-lg font-normal text-[var(--color-primary-700)] transition group-open:rotate-45">
-                      +
-                    </span>
-                  </span>
-                </summary>
-                <p className="mt-3 pr-8 text-sm leading-6 text-[var(--color-text-muted)]">
-                  {item.answer}
-                </p>
-              </details>
-            ))}
-          </div>
+          {messages.faq.description ? (
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--color-text-muted)]">
+              {messages.faq.description}
+            </p>
+          ) : null}
+
+          <FaqAccordion items={items} className="mt-6" />
+
+          {published.length > 0 ? (
+            <FaqViewAllLink label={messages.faq.viewAll} />
+          ) : (
+            <Link
+              href={routes.faq}
+              className="mt-5 inline-flex text-sm font-semibold text-[var(--color-primary-800)] hover:underline"
+            >
+              {messages.faq.viewAll} →
+            </Link>
+          )}
         </div>
 
         <aside className="h-fit rounded-[20px] border border-[var(--color-border)] bg-white p-6 shadow-[0_10px_28px_rgba(23,35,29,0.04)] sm:p-7">
@@ -44,7 +61,7 @@ export function FaqSupportSection() {
             {messages.supportCta.title}
           </h3>
           <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
-            Uzman ekibimiz size yardımcı olmak için hazır.
+            {messages.supportCta.description}
           </p>
           <a
             href={siteConfig.phoneHref}

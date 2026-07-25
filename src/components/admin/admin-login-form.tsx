@@ -29,6 +29,7 @@ export function AdminLoginForm({ labels }: AdminLoginFormProps) {
 
       <Field label={labels.username} htmlFor="username">
         <TextInput
+                  format="username"
           id="username"
           name="username"
           autoComplete="username"
@@ -38,9 +39,9 @@ export function AdminLoginForm({ labels }: AdminLoginFormProps) {
 
       <Field label={labels.password} htmlFor="password">
         <TextInput
+                  format="password"
           id="password"
           name="password"
-          type="password"
           autoComplete="current-password"
           required
         />

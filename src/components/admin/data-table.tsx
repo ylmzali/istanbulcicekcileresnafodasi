@@ -111,6 +111,7 @@ export function AdminDataTable<T>({
                   <input
                     type="search"
                     name={filter.id}
+                    maxLength={100}
                     defaultValue={filter.value ?? ""}
                     placeholder={filter.placeholder ?? labels.search}
                     className="h-9 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 text-sm outline-none focus:border-[var(--color-primary-700)] focus:ring-2 focus:ring-[var(--color-primary-100)]"

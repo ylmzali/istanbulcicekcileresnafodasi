@@ -308,7 +308,7 @@ const publicPostSelect = {
   seoDescription: true,
 } as const;
 
-function publishedPostWhere(now = new Date()) {
+export function publishedPostWhere(now = new Date()) {
   return {
     deletedAt: null as Date | null,
     status: "published" as const,

@@ -54,3 +54,7 @@ next-env.d.ts
 # user uploads
 /public/uploads/**
 !/public/uploads/.gitkeep
+/storage/resources/**
+!/storage/resources/.gitkeep
+/storage/applications/**
+!/storage/applications/.gitkeep

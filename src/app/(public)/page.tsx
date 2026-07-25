@@ -1,5 +1,4 @@
 import { AboutSection } from "@/components/home/about-section";
-import { DirectorySection } from "@/components/home/directory-section";
 import { EventsResourcesSection } from "@/components/home/events-resources-section";
 import { FaqSupportSection } from "@/components/home/faq-support-section";
 import { HeroSection } from "@/components/home/hero-section";
@@ -15,25 +14,33 @@ import {
 import { listUpcomingEvents } from "@/services/events";
 import { getHomeNewsFeed, serializeHomeNewsItem } from "@/services/posts";
 import { listActiveHeroSlides } from "@/services/banners";
+import { listPublicResources } from "@/services/resources";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Ana Sayfa",
   description:
-    "İstanbul Çiçekçiler Esnaf Odası resmi web sitesi. Üyelik işlemleri, duyurular, eğitimler ve kayıtlı çiçekçi rehberi.",
+    "İstanbul Çiçekçiler Esnaf Odası resmi web sitesi. Üyelik işlemleri, duyurular ve eğitimler.",
 };
 
 export default async function HomePage() {
-  const [announcement, activeMemberCount, newsItems, upcomingEvents, heroSlides] =
-    await Promise.all([
-      getFeaturedAnnouncement(),
-      getActiveMemberCount(),
-      getHomeNewsFeed(4, "all")
-        .then((rows) => rows.map(serializeHomeNewsItem))
-        .catch(() => []),
-      listUpcomingEvents(3).catch(() => []),
-      listActiveHeroSlides().catch(() => []),
-    ]);
+  const [
+    announcement,
+    activeMemberCount,
+    newsItems,
+    upcomingEvents,
+    heroSlides,
+    resources,
+  ] = await Promise.all([
+    getFeaturedAnnouncement(),
+    getActiveMemberCount(),
+    getHomeNewsFeed(4, "all")
+      .then((rows) => rows.map(serializeHomeNewsItem))
+      .catch(() => []),
+    listUpcomingEvents(3).catch(() => []),
+    listActiveHeroSlides().catch(() => []),
+    listPublicResources(5).catch(() => []),
+  ]);
 
   return (
     <>
@@ -44,9 +51,8 @@ export default async function HomePage() {
       />
       <PresidentMessageSection />
       <MemberHubSection />
-      <DirectorySection />
       <NewsSection items={newsItems} />
-      <EventsResourcesSection events={upcomingEvents} />
+      <EventsResourcesSection events={upcomingEvents} resources={resources} />
       <StatsSection activeMemberCount={activeMemberCount} />
       <AboutSection />
       <FaqSupportSection />

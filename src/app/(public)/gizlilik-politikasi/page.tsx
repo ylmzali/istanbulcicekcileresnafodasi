@@ -1,14 +1,12 @@
-import { PagePlaceholder } from "@/components/layout/page-placeholder";
 import type { Metadata } from "next";
+import { LegalDocumentView } from "@/components/content/legal-document";
+import { privacyDocument } from "@/lib/legal/content";
 
-export const metadata: Metadata = { title: "Gizlilik Politikası" };
+export const metadata: Metadata = {
+  title: privacyDocument.title,
+  description: privacyDocument.description,
+};
 
 export default function PrivacyPage() {
-  return (
-    <PagePlaceholder
-      title="Gizlilik Politikası"
-      description="Gizlilik politikası metni bu sayfada yayınlanacaktır."
-      breadcrumbs={[{ label: "Gizlilik Politikası" }]}
-    />
-  );
+  return <LegalDocumentView document={privacyDocument} />;
 }

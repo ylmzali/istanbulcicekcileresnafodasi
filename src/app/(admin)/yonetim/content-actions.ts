@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { redirect } from "next/navigation";
-import { requireAdminSession } from "@/lib/auth/session";
+import { requireAdminPermission } from "@/lib/auth/permissions";
 import { slugErrorMessage } from "@/lib/resolve-slug";
 import { routes } from "@/lib/routes";
 import {
@@ -57,12 +57,8 @@ function nullable(formData: FormData, key: string) {
   return value.length ? value : null;
 }
 
-async function assertAdmin() {
-  const session = await requireAdminSession();
-  if (!session) {
-    redirect(routes.admin.login);
-  }
-  return session;
+async function assertContentPublish() {
+  return requireAdminPermission("content.publish");
 }
 
 function rethrowRedirect(error: unknown) {
@@ -76,7 +72,7 @@ export async function savePostAction(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  await assertAdmin();
+  await assertContentPublish();
 
   const input: PostInput = {
     type: str(formData, "type") as PostInput["type"],
@@ -120,7 +116,7 @@ export async function savePostAction(
 }
 
 export async function deletePostAction(id: string) {
-  await assertAdmin();
+  await assertContentPublish();
   try {
     await softDeletePost(id);
   } catch {
@@ -131,7 +127,7 @@ export async function deletePostAction(id: string) {
 }
 
 export async function setPostFeaturedAction(id: string, featured: boolean) {
-  await assertAdmin();
+  await assertContentPublish();
   try {
     await setPostFeatured(id, featured);
   } catch {
@@ -149,7 +145,7 @@ export async function movePostSortAction(
   id: string,
   direction: "up" | "down",
 ) {
-  await assertAdmin();
+  await assertContentPublish();
   try {
     await movePostSort(id, direction);
   } catch {
@@ -164,7 +160,7 @@ export async function saveEventAction(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  await assertAdmin();
+  await assertContentPublish();
 
   const capacityRaw = str(formData, "capacity").trim();
   const input: EventInput = {
@@ -177,7 +173,9 @@ export async function saveEventAction(
     onlineUrl: nullable(formData, "onlineUrl"),
     startsAt: str(formData, "startsAt"),
     endsAt: nullable(formData, "endsAt"),
-    capacity: capacityRaw ? Number(capacityRaw) : null,
+    capacity: capacityRaw
+      ? Number(capacityRaw.replace(/\D/g, "")) || null
+      : null,
     registrationOpen: nullable(formData, "registrationOpen"),
     registrationClose: nullable(formData, "registrationClose"),
     status: str(formData, "status") as EventInput["status"],
@@ -211,7 +209,7 @@ export async function saveEventAction(
 }
 
 export async function setEventFeaturedAction(id: string, featured: boolean) {
-  await assertAdmin();
+  await assertContentPublish();
   try {
     await setEventFeatured(id, featured);
   } catch {
@@ -226,7 +224,7 @@ export async function moveEventSortAction(
   id: string,
   direction: "up" | "down",
 ) {
-  await assertAdmin();
+  await assertContentPublish();
   try {
     await moveEventSort(id, direction);
   } catch {
@@ -238,7 +236,7 @@ export async function moveEventSortAction(
 }
 
 export async function deleteEventAction(id: string) {
-  await assertAdmin();
+  await assertContentPublish();
   try {
     await softDeleteEvent(id);
   } catch {
@@ -253,7 +251,7 @@ export async function saveFaqAction(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  await assertAdmin();
+  await assertContentPublish();
 
   const input: FaqInput = {
     question: str(formData, "question"),
@@ -269,9 +267,13 @@ export async function saveFaqAction(
     } else {
       const created = await createFaq(input);
       revalidatePath(routes.admin.faqs);
+      revalidatePath(routes.home);
+      revalidatePath(routes.faq);
       redirect(routes.admin.faqEdit(created.id));
     }
     revalidatePath(routes.admin.faqs);
+    revalidatePath(routes.home);
+    revalidatePath(routes.faq);
     return { success: true };
   } catch (error) {
     rethrowRedirect(error);
@@ -280,13 +282,15 @@ export async function saveFaqAction(
 }
 
 export async function deleteFaqAction(id: string) {
-  await assertAdmin();
+  await assertContentPublish();
   try {
     await deleteFaq(id);
   } catch {
     return;
   }
   revalidatePath(routes.admin.faqs);
+  revalidatePath(routes.home);
+  revalidatePath(routes.faq);
   redirect(routes.admin.faqs);
 }
 
@@ -294,7 +298,7 @@ export async function createFaqCategoryAction(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  await assertAdmin();
+  await assertContentPublish();
   try {
     await createFaqCategory({
       name: str(formData, "name"),
@@ -302,6 +306,8 @@ export async function createFaqCategoryAction(
       sortOrder: Number(str(formData, "sortOrder") || 0),
     });
     revalidatePath(routes.admin.faqs);
+    revalidatePath(routes.home);
+    revalidatePath(routes.faq);
     return { success: true };
   } catch (error) {
     return { error: slugErrorMessage(error, "Kategori eklenemedi.") };
@@ -313,7 +319,7 @@ export async function saveBannerAction(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  await assertAdmin();
+  await assertContentPublish();
 
   const input: BannerInput = {
     variant: str(formData, "variant") as BannerInput["variant"],
@@ -353,7 +359,7 @@ export async function saveBannerAction(
 }
 
 export async function deleteBannerAction(id: string) {
-  await assertAdmin();
+  await assertContentPublish();
   try {
     await deleteBanner(id);
   } catch {
@@ -368,7 +374,7 @@ export async function moveBannerSortAction(
   id: string,
   direction: "up" | "down",
 ) {
-  await assertAdmin();
+  await assertContentPublish();
   try {
     await moveBannerSort(id, direction);
   } catch {
@@ -379,7 +385,7 @@ export async function moveBannerSortAction(
 }
 
 export async function setBannerActiveAction(id: string, active: boolean) {
-  await assertAdmin();
+  await assertContentPublish();
   try {
     await setBannerActive(id, active);
   } catch {

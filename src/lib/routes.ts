@@ -15,6 +15,9 @@ export const routes = {
   membership: {
     root: "/uyelik-islemleri",
     apply: "/uyelik-islemleri/basvuru",
+    applyTrack: "/uyelik-islemleri/basvuru/takip",
+    applyTrackQuery: (trackingNo: string) =>
+      `/uyelik-islemleri/basvuru/takip?no=${encodeURIComponent(trackingNo)}`,
     dues: "/aidat-sorgulama",
   },
   legislation: "/mevzuat",
@@ -34,21 +37,23 @@ export const routes = {
     detail: (slug: string) => `/duyurular/${slug}`,
   },
   contact: "/iletisim",
+  faq: "/sss",
   informationRequest: "/bilgi-edinme",
   complaint: "/dilek-sikayet",
-  florists: "/kayitli-cicekciler",
-  documentVerification: "/evrak-dogrulama",
+  supportTrack: "/destek/takip",
+  supportTrackQuery: (trackingNo: string) =>
+    `/destek/takip?no=${encodeURIComponent(trackingNo)}`,
   legal: {
     kvkk: "/kvkk",
     privacy: "/gizlilik-politikasi",
     cookies: "/cerez-politikasi",
   },
   member: {
+    home: "/uye",
     login: "/uye/giris",
     forgotPassword: "/uye/sifremi-unuttum",
-    documentRequest: "/uye/belge-talebi",
+    resetPassword: (token: string) => `/uye/sifre-yenile/${token}`,
     dues: "/uye/aidat",
-    appointment: "/uye/randevu",
   },
   admin: {
     root: "/yonetim",
@@ -65,21 +70,27 @@ export const routes = {
     banners: "/yonetim/hero",
     bannerNew: "/yonetim/hero/yeni",
     bannerEdit: (id: string) => `/yonetim/hero/${id}`,
+    resources: "/yonetim/mevzuat",
+    resourceNew: "/yonetim/mevzuat/yeni",
+    resourceEdit: (id: string) => `/yonetim/mevzuat/${id}`,
     members: "/yonetim/uyeler",
+    memberNew: "/yonetim/uyeler/yeni",
+    memberEdit: (id: string) => `/yonetim/uyeler/${id}`,
     applications: "/yonetim/basvurular",
-    documentRequests: "/yonetim/belge-talepleri",
+    applicationDetail: (id: string) => `/yonetim/basvurular/${id}`,
     dues: "/yonetim/aidat",
-    appointments: "/yonetim/randevular",
+    duesPeriodNew: "/yonetim/aidat/donem/yeni",
+    duesPeriodEdit: (id: string) => `/yonetim/aidat/donem/${id}`,
+    duesDetail: (id: string) => `/yonetim/aidat/${id}`,
     support: "/yonetim/destek",
-    florists: "/yonetim/rehber",
+    supportDetail: (id: string) => `/yonetim/destek/${id}`,
+    contactSubmissions: "/yonetim/iletisim-mesajlari",
   },
 } as const;
 
 /** Short return keys for login — never put encoded paths in the query string. */
 export const memberLoginReturnKeys = {
-  "belge-talebi": routes.member.documentRequest,
   aidat: routes.member.dues,
-  randevu: routes.member.appointment,
 } as const;
 
 export type MemberLoginReturnKey = keyof typeof memberLoginReturnKeys;
@@ -103,6 +114,21 @@ export function memberLoginHref(returnKey?: MemberLoginReturnKey) {
   return `${routes.member.login}?return=${returnKey}`;
 }
 
+/** Map a protected /uye path to a short return key for login redirect. */
+export function memberReturnKeyFromPath(
+  pathname: string,
+): MemberLoginReturnKey | null {
+  if (pathname.startsWith(routes.member.dues)) return "aidat";
+  return null;
+}
+
+/** Safe post-login destination (never open redirect). */
+export function resolveMemberPostLoginPath(
+  returnKey: string | null | undefined,
+): string {
+  return resolveMemberLoginReturn(returnKey) ?? routes.member.home;
+}
+
 export const publicSitemapPaths = [
   routes.home,
   routes.corporate.root,
@@ -112,6 +138,7 @@ export const publicSitemapPaths = [
   routes.corporate.pastPresidents,
   routes.membership.root,
   routes.membership.apply,
+  routes.membership.applyTrack,
   routes.membership.dues,
   routes.legislation,
   routes.events.root,
@@ -120,8 +147,12 @@ export const publicSitemapPaths = [
   routes.news.sector,
   routes.announcements.root,
   routes.contact,
-  routes.florists,
-  routes.documentVerification,
+  routes.faq,
   routes.informationRequest,
   routes.complaint,
+  routes.supportTrack,
+  routes.search,
+  routes.legal.kvkk,
+  routes.legal.privacy,
+  routes.legal.cookies,
 ] as const;

@@ -9,8 +9,8 @@ import { cn } from "@/lib/utils";
 const links = [
   { href: routes.membership.root, label: "Üyelik Koşulları" },
   { href: routes.membership.apply, label: "Üyelik Başvurusu" },
+  { href: routes.membership.applyTrack, label: "Başvuru Takip" },
   { href: routes.membership.dues, label: "Aidat Sorgulama" },
-  { href: routes.documentVerification, label: "Evrak Doğrulama" },
 ] as const;
 
 export function MembershipSubnav({ current }: { current: string }) {

@@ -145,6 +145,7 @@ export function BannerForm({
 
         <Field label={labels.title} htmlFor="title" size="xl">
           <TextInput
+                  format="title"
             id="title"
             name="title"
             defaultValue={values.title}
@@ -156,6 +157,7 @@ export function BannerForm({
           <>
             <Field label={labels.eyebrow} htmlFor="eyebrow" size="lg">
               <TextInput
+                  format="title"
                 id="eyebrow"
                 name="eyebrow"
                 defaultValue={values.eyebrow}
@@ -163,6 +165,7 @@ export function BannerForm({
             </Field>
             <Field label={labels.descriptionField} htmlFor="description" size="xl">
               <TextTextarea
+                  format="multiline"
                 id="description"
                 name="description"
                 defaultValue={values.description}
@@ -202,6 +205,7 @@ export function BannerForm({
           <div className="grid items-end gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
             <Field label={labels.linkHref} htmlFor="primaryCtaHref">
               <TextInput
+                  format="url"
                 id="primaryCtaHref"
                 name="primaryCtaHref"
                 defaultValue={values.primaryCtaHref}
@@ -220,6 +224,7 @@ export function BannerForm({
           <div className="grid items-end gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
             <Field label={labels.primaryCtaLabel} htmlFor="primaryCtaLabel">
               <TextInput
+                  format="plainText"
                 id="primaryCtaLabel"
                 name="primaryCtaLabel"
                 defaultValue={values.primaryCtaLabel}
@@ -227,6 +232,7 @@ export function BannerForm({
             </Field>
             <Field label={labels.primaryCtaHref} htmlFor="primaryCtaHref">
               <TextInput
+                  format="url"
                 id="primaryCtaHref"
                 name="primaryCtaHref"
                 defaultValue={values.primaryCtaHref}
@@ -247,6 +253,7 @@ export function BannerForm({
           <div className="grid items-end gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
             <Field label={labels.secondaryCtaLabel} htmlFor="secondaryCtaLabel">
               <TextInput
+                  format="plainText"
                 id="secondaryCtaLabel"
                 name="secondaryCtaLabel"
                 defaultValue={values.secondaryCtaLabel}
@@ -254,6 +261,7 @@ export function BannerForm({
             </Field>
             <Field label={labels.secondaryCtaHref} htmlFor="secondaryCtaHref">
               <TextInput
+                  format="url"
                 id="secondaryCtaHref"
                 name="secondaryCtaHref"
                 defaultValue={values.secondaryCtaHref}

@@ -4,6 +4,7 @@ export const slugCheckScopeSchema = z.enum([
   "post",
   "event",
   "faq_category",
+  "resource",
 ]);
 
 export type SlugCheckScope = z.infer<typeof slugCheckScopeSchema>;

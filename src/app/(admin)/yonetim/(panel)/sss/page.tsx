@@ -57,7 +57,19 @@ export default async function AdminFaqsPage({ searchParams }: PageProps) {
         <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
           {a.category}
         </h2>
-        <FaqCategoryForm labels={{ name: a.category, save: a.save }} />
+        <FaqCategoryForm
+          labels={{
+            name: a.category,
+            slug: a.slug,
+            slugHint: a.slugHint,
+            slugChecking: a.slugChecking,
+            slugAvailable: a.slugAvailable,
+            slugTaken: a.slugTaken,
+            slugInvalid: a.slugInvalid,
+            slugEmptyHint: a.slugEmptyHint,
+            save: a.save,
+          }}
+        />
         {categories.length > 0 ? (
           <ul className="mt-3 flex flex-wrap gap-1.5">
             {categories.map((item) => (

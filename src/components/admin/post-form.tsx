@@ -190,6 +190,7 @@ export function PostForm({
 
             <Field label={labels.title} htmlFor="title" size="xl">
               <TextInput
+                  format="title"
                 id="title"
                 name="title"
                 value={title}
@@ -260,6 +261,7 @@ export function PostForm({
 
             <Field label={labels.excerpt} htmlFor="excerpt" size="xl">
               <TextTextarea
+                  format="excerpt"
                 id="excerpt"
                 name="excerpt"
                 value={excerpt}
@@ -270,6 +272,7 @@ export function PostForm({
 
             <Field label={labels.content} htmlFor="content" size="xl">
               <TextTextarea
+                  format="articleBody"
                 id="content"
                 name="content"
                 value={content}
@@ -338,6 +341,7 @@ export function PostForm({
               hint={labels.seoAutoHint}
             >
               <TextInput
+                  format="title"
                 id="seoTitle"
                 name="seoTitle"
                 value={seoTitle}
@@ -353,6 +357,7 @@ export function PostForm({
               size="xl"
             >
               <TextTextarea
+                format="note"
                 id="seoDescription"
                 name="seoDescription"
                 value={seoDescription}

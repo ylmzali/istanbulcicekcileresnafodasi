@@ -1,8 +1,6 @@
+import { MemberLoginForm } from "@/components/member/member-login-form";
 import {
-  CalendarIcon,
-  FileCheckIcon,
   InfoIcon,
-  ShieldCheckIcon,
   UserIcon,
   WalletIcon,
 } from "@/components/ui/icons";
@@ -16,13 +14,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 const cards: Array<{
-  key:
-    | "membershipApplication"
-    | "documentRequest"
-    | "dues"
-    | "verification"
-    | "appointment"
-    | "information";
+  key: "membershipApplication" | "dues" | "information";
   href: string;
   loginReturn?: MemberLoginReturnKey;
   icon: ReactNode;
@@ -35,48 +27,29 @@ const cards: Array<{
     number: 1,
   },
   {
-    key: "documentRequest",
-    href: routes.member.documentRequest,
-    loginReturn: "belge-talebi",
-    icon: <FileCheckIcon className="h-5 w-5" />,
-    number: 2,
-  },
-  {
     key: "dues",
     href: routes.membership.dues,
     icon: <WalletIcon className="h-5 w-5" />,
-    number: 3,
-  },
-  {
-    key: "verification",
-    href: routes.documentVerification,
-    icon: <ShieldCheckIcon className="h-5 w-5" />,
-    number: 4,
-  },
-  {
-    key: "appointment",
-    href: routes.member.appointment,
-    loginReturn: "randevu",
-    icon: <CalendarIcon className="h-5 w-5" />,
-    number: 5,
+    number: 2,
   },
   {
     key: "information",
     href: routes.informationRequest,
     icon: <InfoIcon className="h-5 w-5" />,
-    number: 6,
+    number: 3,
   },
 ];
 
 export function MemberHubSection() {
   const messages = getMessages();
+  const hub = messages.memberHub;
 
   return (
     <section className="border-b border-[var(--color-border)] bg-[var(--color-surface-soft)] py-14">
       <div className="mx-auto max-w-[1280px] px-4 sm:px-6">
         <div className="mb-8 max-w-2xl">
           <h2 className="text-2xl font-bold text-[var(--color-text)] sm:text-3xl">
-            {messages.memberHub.title}
+            {hub.title}
           </h2>
           <p className="mt-2 text-[var(--color-text-muted)]">
             Odaya gelmeden işlemlerinizi hızlı ve güvenli şekilde tamamlayın.
@@ -84,9 +57,9 @@ export function MemberHubSection() {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[1.7fr_1fr] lg:items-stretch">
-          <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {cards.map((card) => {
-              const content = messages.memberHub.cards[card.key];
+              const content = hub.cards[card.key];
               const href = card.loginReturn
                 ? memberLoginHref(card.loginReturn)
                 : card.href;
@@ -125,67 +98,29 @@ export function MemberHubSection() {
               >
                 🔒
               </span>
-              <h3 className="text-lg font-bold">{messages.memberHub.loginTitle}</h3>
+              <h3 className="text-lg font-bold">{hub.loginTitle}</h3>
             </div>
 
-            <form
-              className="flex flex-1 flex-col gap-3.5"
-              action={routes.member.login}
-              method="get"
-            >
-              <div>
-                <label htmlFor="member-identifier" className="sr-only">
-                  {messages.memberHub.identifierLabel}
-                </label>
-                <input
-                  id="member-identifier"
-                  name="identifier"
-                  autoComplete="username"
-                  placeholder={messages.memberHub.identifierLabel}
-                  className="h-11 w-full rounded-[10px] border-0 bg-white px-3 text-sm text-[var(--color-text)] outline-none ring-2 ring-transparent placeholder:text-[var(--color-text-muted)] focus:ring-white/50"
-                />
-              </div>
-              <div>
-                <label htmlFor="member-password" className="sr-only">
-                  {messages.memberHub.passwordLabel}
-                </label>
-                <input
-                  id="member-password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  placeholder="Şifreniz"
-                  className="h-11 w-full rounded-[10px] border-0 bg-white px-3 text-sm text-[var(--color-text)] outline-none ring-2 ring-transparent placeholder:text-[var(--color-text-muted)] focus:ring-white/50"
-                />
-              </div>
+            <MemberLoginForm
+              variant="hub"
+              labels={{
+                title: hub.loginTitle,
+                hint: "",
+                identifier: hub.identifierLabel,
+                password: hub.passwordLabel,
+                rememberMe: hub.rememberMe,
+                forgotPassword: hub.forgotPassword,
+                submit: hub.submit,
+                showPassword: hub.showPassword,
+                hidePassword: hub.hidePassword,
+              }}
+            />
 
-              <button
-                type="submit"
-                className="mt-1 inline-flex h-11 w-full items-center justify-center rounded-[10px] bg-white text-sm font-bold text-[var(--color-primary-900)] transition hover:bg-[var(--color-primary-100)]"
-              >
-                {messages.memberHub.submit}
-              </button>
-
-              <Link
-                href={routes.member.login}
-                className="inline-flex items-center justify-center gap-1 pt-1 text-sm font-medium text-white/90 hover:text-white"
-              >
-                {messages.memberHub.memberNoLogin}
-                <span aria-hidden>→</span>
+            <div className="mt-3 flex justify-end text-xs text-white/80">
+              <Link href={routes.membership.apply} className="hover:text-white">
+                {hub.becomeMember}
               </Link>
-
-              <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-white/15 pt-4 text-xs text-white/80">
-                <Link
-                  href={routes.member.forgotPassword}
-                  className="hover:text-white"
-                >
-                  {messages.memberHub.forgotPassword}
-                </Link>
-                <Link href={routes.membership.apply} className="hover:text-white">
-                  {messages.memberHub.becomeMember}
-                </Link>
-              </div>
-            </form>
+            </div>
           </aside>
         </div>
       </div>

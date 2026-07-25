@@ -305,6 +305,10 @@ model Member {
   userId           String       @unique @map("user_id")
   memberNo         String       @unique @map("member_no") @db.VarChar(40)
   identityNoEnc    String?      @map("identity_no_encrypted") @db.Text
+  /** HMAC lookup hash for login by T.C. (not reversible) */
+  identityNoHash   String?      @unique @map("identity_no_hash") @db.VarChar(128)
+  /** Halkbank tahsilat numarası (Tahsilat ID) */
+  collectionRef    String?      @map("collection_ref") @db.VarChar(80)
   status           MemberStatus @default(pending)
   registrationDate DateTime?    @map("registration_date") @db.Date
   terminationDate  DateTime?    @map("termination_date") @db.Date
@@ -339,6 +343,7 @@ model MemberProfile {
   addressLine1     String?  @map("address_line1") @db.VarChar(255)
   addressLine2     String?  @map("address_line2") @db.VarChar(255)
   postalCode       String?  @map("postal_code") @db.VarChar(20)
+  countryCode      String   @default("TR") @map("country_code") @db.VarChar(2)
   cityName         String?  @map("city_name") @db.VarChar(120)
   districtName     String?  @map("district_name") @db.VarChar(120)
   createdAt        DateTime @default(now()) @map("created_at")
@@ -388,6 +393,7 @@ model Business {
   email              String?                     @db.VarChar(190)
   website            String?                     @db.VarChar(255)
   description        String?                     @db.Text
+  countryCode        String                      @default("TR") @map("country_code") @db.VarChar(2)
   districtId         String?                     @map("district_id")
   address            String?                     @db.VarChar(500)
   latitude           Decimal?                    @db.Decimal(10, 7)
@@ -627,6 +633,7 @@ model Payment {
   method            PaymentMethod @default(other)
   provider          String?       @db.VarChar(80)
   providerReference String?       @map("provider_reference") @db.VarChar(190)
+  note              String?       @db.VarChar(500)
   status            PaymentStatus @default(pending)
   paidAt            DateTime?     @map("paid_at")
   createdById       String?       @map("created_by")
@@ -976,17 +983,20 @@ model Resource {
   id          String             @id @default(cuid())
   category    String?            @db.VarChar(120)
   title       String             @db.VarChar(255)
+  slug        String             @unique @db.VarChar(180)
   fileKey     String             @map("file_key") @db.VarChar(500)
   version     String?            @db.VarChar(40)
   fileSize    Int?               @map("file_size")
   mimeType    String?            @map("mime_type") @db.VarChar(120)
   visibility  ResourceVisibility @default(public)
+  sortOrder   Int                @default(0) @map("sort_order")
   publishedAt DateTime?          @map("published_at")
   createdAt   DateTime           @default(now()) @map("created_at")
   updatedAt   DateTime           @updatedAt @map("updated_at")
   deletedAt   DateTime?          @map("deleted_at")
 
   @@index([visibility, publishedAt])
+  @@index([sortOrder])
   @@map("resources")
 }
 

@@ -1,14 +1,12 @@
-import { PagePlaceholder } from "@/components/layout/page-placeholder";
 import type { Metadata } from "next";
+import { LegalDocumentView } from "@/components/content/legal-document";
+import { kvkkDocument } from "@/lib/legal/content";
 
-export const metadata: Metadata = { title: "KVKK Aydınlatma Metni" };
+export const metadata: Metadata = {
+  title: kvkkDocument.title,
+  description: kvkkDocument.description,
+};
 
 export default function KvkkPage() {
-  return (
-    <PagePlaceholder
-      title="KVKK Aydınlatma Metni"
-      description="Kişisel verilerin korunması aydınlatma metni bu sayfada yayınlanacaktır."
-      breadcrumbs={[{ label: "KVKK Aydınlatma Metni" }]}
-    />
-  );
+  return <LegalDocumentView document={kvkkDocument} />;
 }

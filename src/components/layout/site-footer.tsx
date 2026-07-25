@@ -1,3 +1,4 @@
+import { FacebookIcon, InstagramIcon } from "@/components/ui/icons";
 import { getMessages } from "@/lib/i18n";
 import { routes } from "@/lib/routes";
 import { siteConfig } from "@/lib/site";
@@ -53,6 +54,11 @@ export function SiteFooter() {
               </Link>
             </li>
             <li>
+              <Link href={routes.faq} className="hover:text-white">
+                {messages.nav.faq}
+              </Link>
+            </li>
+            <li>
               <Link href={routes.contact} className="hover:text-white">
                 {messages.nav.contact}
               </Link>
@@ -80,19 +86,6 @@ export function SiteFooter() {
                 {messages.memberHub.cards.dues.title}
               </Link>
             </li>
-            <li>
-              <Link
-                href={routes.documentVerification}
-                className="hover:text-white"
-              >
-                {messages.nav.documentVerification}
-              </Link>
-            </li>
-            <li>
-              <Link href={routes.florists} className="hover:text-white">
-                {messages.directory.title}
-              </Link>
-            </li>
           </ul>
         </div>
 
@@ -114,6 +107,26 @@ export function SiteFooter() {
               </a>
             </li>
           </ul>
+          <div className="mt-4 flex items-center gap-2">
+            <a
+              href={siteConfig.social.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-[10px] bg-white/10 text-white transition hover:bg-white/18"
+              aria-label={messages.topBar.instagram}
+            >
+              <InstagramIcon className="h-4 w-4" />
+            </a>
+            <a
+              href={siteConfig.social.facebook}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-[10px] bg-white/10 text-white transition hover:bg-white/18"
+              aria-label={messages.topBar.facebook}
+            >
+              <FacebookIcon className="h-4 w-4" />
+            </a>
+          </div>
         </div>
       </div>
 

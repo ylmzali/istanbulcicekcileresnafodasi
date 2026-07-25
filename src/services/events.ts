@@ -14,7 +14,18 @@ export const eventInputSchema = z.object({
   onlineUrl: z.string().trim().max(500).optional().nullable(),
   startsAt: z.string().min(1),
   endsAt: z.string().optional().nullable(),
-  capacity: z.coerce.number().int().positive().optional().nullable(),
+  capacity: z
+    .union([z.string(), z.number(), z.null(), z.undefined()])
+    .transform((value) => {
+      if (value == null || value === "") return null;
+      if (typeof value === "number") {
+        return Number.isInteger(value) && value > 0 ? value : null;
+      }
+      const digits = value.replace(/\D/g, "");
+      if (!digits) return null;
+      const parsed = Number(digits);
+      return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+    }),
   registrationOpen: z.string().optional().nullable(),
   registrationClose: z.string().optional().nullable(),
   status: contentStatusSchema.default("draft"),
@@ -326,12 +337,31 @@ export async function listUpcomingEvents(limit = 3) {
       status: "published",
       startsAt: { gte: now },
     },
-    orderBy: [
-      { featured: "desc" },
-      { sortOrder: "asc" },
-      { startsAt: "asc" },
-    ],
+    orderBy: [{ startsAt: "asc" }, { sortOrder: "asc" }],
     take: limit,
+    select: publicEventSelect,
+  });
+}
+
+/** Public list hero: the admin-marked featured event (prefer upcoming). */
+export async function getFeaturedPublicEvent() {
+  const now = new Date();
+  const baseWhere = {
+    deletedAt: null as Date | null,
+    status: "published" as const,
+    featured: true,
+  };
+
+  const upcoming = await prisma.event.findFirst({
+    where: { ...baseWhere, startsAt: { gte: now } },
+    orderBy: [{ sortOrder: "asc" }, { startsAt: "asc" }],
+    select: publicEventSelect,
+  });
+  if (upcoming) return upcoming;
+
+  return prisma.event.findFirst({
+    where: baseWhere,
+    orderBy: [{ sortOrder: "asc" }, { startsAt: "desc" }],
     select: publicEventSelect,
   });
 }
@@ -341,6 +371,8 @@ export async function listPublishedEvents(filters?: {
   pageSize?: number;
   upcomingOnly?: boolean;
   scope?: "all" | "upcoming" | "past";
+  /** Exclude the featured hero card from the grid (page 1). */
+  excludeId?: string | null;
 }) {
   const page = Math.max(1, filters?.page ?? 1);
   const pageSize = Math.min(50, Math.max(1, filters?.pageSize ?? 12));
@@ -351,6 +383,7 @@ export async function listPublishedEvents(filters?: {
   const where = {
     deletedAt: null as Date | null,
     status: "published" as const,
+    ...(filters?.excludeId ? { id: { not: filters.excludeId } } : {}),
     ...(scope === "upcoming"
       ? { startsAt: { gte: now } }
       : scope === "past"
@@ -358,22 +391,16 @@ export async function listPublishedEvents(filters?: {
         : {}),
   };
 
-  const orderAsc = scope === "upcoming";
+  // List by date only — featured belongs in the hero slot, not list priority.
+  const orderBy =
+    scope === "past"
+      ? ([{ startsAt: "desc" }, { sortOrder: "asc" }] as const)
+      : ([{ startsAt: "asc" }, { sortOrder: "asc" }] as const);
 
   const [rows, total] = await Promise.all([
     prisma.event.findMany({
       where,
-      orderBy: orderAsc
-        ? [
-            { featured: "desc" },
-            { sortOrder: "asc" },
-            { startsAt: "asc" },
-          ]
-        : [
-            { featured: "desc" },
-            { sortOrder: "asc" },
-            { startsAt: "desc" },
-          ],
+      orderBy: [...orderBy],
       skip: (page - 1) * pageSize,
       take: pageSize,
       select: publicEventSelect,

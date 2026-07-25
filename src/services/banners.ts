@@ -113,8 +113,8 @@ function fallbackHeroSlides(): HeroSlide[] {
   const messages = getMessages().hero.slides;
   const links = [
     { primary: routes.membership.root, secondary: routes.corporate.root },
-    { primary: routes.florists, secondary: routes.membership.apply },
-    { primary: routes.member.login, secondary: routes.documentVerification },
+    { primary: routes.news.root, secondary: routes.membership.apply },
+    { primary: routes.member.login, secondary: routes.contact },
   ] as const;
 
   return messages.map((slide, index) => {

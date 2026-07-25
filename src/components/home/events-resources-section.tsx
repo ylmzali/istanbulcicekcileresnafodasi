@@ -3,6 +3,7 @@ import { eventHref } from "@/lib/content-paths";
 import { formatEventDayParts } from "@/lib/datetime";
 import { getMessages } from "@/lib/i18n";
 import { routes } from "@/lib/routes";
+import type { PublicResourceItem } from "@/services/resources";
 import Link from "next/link";
 
 export type HomeEventItem = {
@@ -16,7 +17,13 @@ export type HomeEventItem = {
   startsAt: Date;
 };
 
-export function EventsResourcesSection({ events }: { events: HomeEventItem[] }) {
+export function EventsResourcesSection({
+  events,
+  resources,
+}: {
+  events: HomeEventItem[];
+  resources: PublicResourceItem[];
+}) {
   const messages = getMessages();
 
   return (
@@ -103,19 +110,39 @@ export function EventsResourcesSection({ events }: { events: HomeEventItem[] }) 
             </div>
           </div>
 
-          <ul className="space-y-2">
-            {messages.resources.items.map((item) => (
-              <li key={item}>
-                <Link
-                  href={routes.legislation}
-                  className="flex items-center justify-between gap-3 rounded-[14px] border border-[var(--color-border)] bg-white px-4 py-3.5 text-sm font-semibold text-[var(--color-text)] transition hover:border-[var(--color-primary-100)]"
-                >
-                  <span>{item}</span>
-                  <DownloadIcon className="h-4 w-4 shrink-0 text-[var(--color-primary-700)]" />
-                </Link>
-              </li>
-            ))}
-          </ul>
+          {resources.length === 0 ? (
+            <p className="rounded-[14px] border border-dashed border-[var(--color-border)] bg-white px-4 py-8 text-center text-sm text-[var(--color-text-muted)]">
+              {messages.resources.empty}
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {resources.map((item) => (
+                <li key={item.id}>
+                  <a
+                    href={item.downloadHref}
+                    className="flex items-center justify-between gap-3 rounded-[14px] border border-[var(--color-border)] bg-white px-4 py-3.5 text-sm font-semibold text-[var(--color-text)] transition hover:border-[var(--color-primary-100)]"
+                  >
+                    <span className="min-w-0">
+                      <span className="block">{item.title}</span>
+                      {item.category ? (
+                        <span className="mt-0.5 block text-xs font-normal text-[var(--color-text-muted)]">
+                          {item.category}
+                        </span>
+                      ) : null}
+                    </span>
+                    <DownloadIcon className="h-4 w-4 shrink-0 text-[var(--color-primary-700)]" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <Link
+            href={routes.legislation}
+            className="mt-5 inline-flex h-11 items-center justify-center rounded-[10px] border border-[var(--color-border)] bg-white px-4 text-sm font-bold text-[var(--color-primary-800)] hover:bg-white/80"
+          >
+            {messages.resources.viewAll}
+          </Link>
         </div>
       </div>
     </section>

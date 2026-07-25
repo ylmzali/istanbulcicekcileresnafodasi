@@ -1,15 +1,15 @@
 "use client";
 
 import { MobileNav } from "@/components/layout/mobile-nav";
+import { NavDropdown } from "@/components/layout/nav-dropdown";
 import {
-  ChevronDownIcon,
   ClipboardIcon,
   InfoIcon,
   SearchIcon,
   UserIcon,
 } from "@/components/ui/icons";
 import { getMessages } from "@/lib/i18n";
-import { isExactPathActive, isNavItemActive } from "@/lib/nav";
+import { isNavItemActive } from "@/lib/nav";
 import { routes } from "@/lib/routes";
 import { publicNav, siteConfig } from "@/lib/site";
 import Image from "next/image";
@@ -120,50 +120,33 @@ export function SiteHeader() {
             <ul className="flex items-center gap-0.5">
               {publicNav.map((item) => {
                 const active = isNavItemActive(pathname, item);
+                const label = messages.nav[item.labelKey];
+
+                if (item.children) {
+                  return (
+                    <NavDropdown
+                      key={item.href}
+                      href={item.href}
+                      label={label}
+                      active={active}
+                      childrenItems={item.children}
+                    />
+                  );
+                }
 
                 return (
-                  <li key={item.href} className="group/nav relative">
+                  <li key={item.href}>
                     <Link
                       href={item.href}
                       aria-current={active ? "page" : undefined}
-                      className={`relative inline-flex items-center gap-1 rounded-[10px] px-3 py-3 text-sm font-semibold transition after:absolute after:right-3 after:bottom-2 after:left-3 after:h-0.5 after:rounded-full after:bg-[var(--color-primary-800)] after:content-[''] ${
+                      className={`relative inline-flex items-center rounded-[10px] px-3 py-3 text-sm font-semibold transition after:absolute after:right-3 after:bottom-2 after:left-3 after:h-0.5 after:rounded-full after:bg-[var(--color-primary-800)] after:content-[''] ${
                         active
                           ? "text-[var(--color-primary-800)] after:opacity-100"
                           : "text-[var(--color-text)] after:opacity-0 hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-primary-800)]"
                       }`}
                     >
-                      <span>{messages.nav[item.labelKey]}</span>
-                      {item.children ? (
-                        <ChevronDownIcon className="h-4 w-4 opacity-70" />
-                      ) : null}
+                      {label}
                     </Link>
-
-                    {item.children ? (
-                      <div className="absolute left-0 top-full z-50 hidden pt-1 group-hover/nav:block">
-                        <div className="min-w-[230px] rounded-[14px] border border-[var(--color-border)] bg-white p-2 shadow-[0_12px_30px_rgba(23,35,29,0.08)]">
-                          {item.children.map((child) => {
-                            const childActive = isExactPathActive(
-                              pathname,
-                              child.href,
-                            );
-                            return (
-                              <Link
-                                key={child.href}
-                                href={child.href}
-                                aria-current={childActive ? "page" : undefined}
-                                className={`block rounded-[10px] px-3 py-2.5 text-sm transition ${
-                                  childActive
-                                    ? "bg-[var(--color-primary-100)] font-semibold text-[var(--color-primary-800)]"
-                                    : "text-[var(--color-text)] hover:bg-[var(--color-surface-soft)]"
-                                }`}
-                              >
-                                {child.label}
-                              </Link>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ) : null}
                   </li>
                 );
               })}

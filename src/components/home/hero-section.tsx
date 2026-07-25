@@ -11,7 +11,7 @@ import { siteConfig } from "@/lib/site";
 import type { HeroSlide } from "@/services/banners";
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const AUTO_MS = 7000;
 
@@ -78,6 +78,11 @@ export function HeroSection({
   const messages = getMessages();
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [reduceMotion, setReduceMotion] = useState(false);
+  const progressStartedAt = useRef<number | null>(null);
+  const progressElapsed = useRef(0);
+  const rafRef = useRef<number | null>(null);
 
   const goTo = useCallback(
     (next: number) => {
@@ -93,20 +98,72 @@ export function HeroSection({
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (paused || media.matches || slides.length < 2) return;
+    const sync = () => setReduceMotion(media.matches);
+    sync();
+    media.addEventListener("change", sync);
+    return () => media.removeEventListener("change", sync);
+  }, []);
 
-    const timer = window.setInterval(() => {
-      setIndex((current) => (current + 1) % slides.length);
-    }, AUTO_MS);
+  useEffect(() => {
+    progressStartedAt.current = null;
+    progressElapsed.current = 0;
+    setProgress(0);
+  }, [index, slides.length, reduceMotion]);
 
-    return () => window.clearInterval(timer);
-  }, [paused, slides.length]);
+  useEffect(() => {
+    if (reduceMotion || paused || slides.length < 2) {
+      if (rafRef.current != null) {
+        window.cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      if (progressStartedAt.current != null) {
+        progressElapsed.current +=
+          performance.now() - progressStartedAt.current;
+        progressStartedAt.current = null;
+      }
+      return;
+    }
+
+    const tick = (now: number) => {
+      if (progressStartedAt.current == null) {
+        progressStartedAt.current = now;
+      }
+      const elapsed =
+        progressElapsed.current + (now - progressStartedAt.current);
+      const ratio = Math.min(1, elapsed / AUTO_MS);
+      setProgress(ratio);
+
+      if (ratio >= 1) {
+        progressStartedAt.current = null;
+        progressElapsed.current = 0;
+        setIndex((current) => (current + 1) % slides.length);
+        return;
+      }
+
+      rafRef.current = window.requestAnimationFrame(tick);
+    };
+
+    rafRef.current = window.requestAnimationFrame(tick);
+
+    return () => {
+      if (rafRef.current != null) {
+        window.cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      if (progressStartedAt.current != null) {
+        progressElapsed.current +=
+          performance.now() - progressStartedAt.current;
+        progressStartedAt.current = null;
+      }
+    };
+  }, [paused, reduceMotion, slides.length, index]);
 
   if (slides.length === 0) return null;
 
   const safeIndex = index % slides.length;
   const active = slides[safeIndex];
   const backgroundSrc = siteConfig.heroImage.src;
+  const showProgress = slides.length > 1 && !reduceMotion;
 
   return (
     <section className="relative isolate w-full overflow-hidden text-white">
@@ -123,6 +180,18 @@ export function HeroSection({
 
       <div className="relative flex min-h-[300px] w-full flex-col sm:min-h-[340px] lg:min-h-[380px]">
         <AnnouncementBar title={announcementTitle} href={announcementHref} />
+
+        {showProgress ? (
+          <div
+            className="relative h-[2px] w-full bg-white/20"
+            aria-hidden="true"
+          >
+            <div
+              className="h-full origin-left bg-white/90 will-change-[width]"
+              style={{ width: `${Math.min(100, progress * 100)}%` }}
+            />
+          </div>
+        ) : null}
 
         <div
           className="relative mx-auto flex w-full max-w-[1280px] flex-1 px-4 py-8 sm:px-6 sm:py-10"

@@ -84,6 +84,7 @@ export function FaqsDataTable({
       rows={rows}
       columns={columns}
       getRowId={(row) => row.id}
+      getRowHref={(row) => routes.admin.faqEdit(row.id)}
       labels={labels}
       basePath={routes.admin.faqs}
       total={total}

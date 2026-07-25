@@ -150,3 +150,102 @@ export async function deleteFaq(id: string) {
 
   return prisma.faq.delete({ where: { id } });
 }
+
+export type PublishedFaq = {
+  id: string;
+  question: string;
+  answer: string;
+  sortOrder: number;
+  category: { id: string; name: string; slug: string } | null;
+};
+
+export async function listPublishedFaqs(options?: {
+  limit?: number;
+  categorySlug?: string;
+}): Promise<PublishedFaq[]> {
+  const limit = Math.min(100, Math.max(1, options?.limit ?? 50));
+
+  return prisma.faq.findMany({
+    where: {
+      status: "published",
+      ...(options?.categorySlug
+        ? { category: { slug: options.categorySlug } }
+        : {}),
+    },
+    orderBy: [{ sortOrder: "asc" }, { updatedAt: "desc" }],
+    take: limit,
+    select: {
+      id: true,
+      question: true,
+      answer: true,
+      sortOrder: true,
+      category: {
+        select: { id: true, name: true, slug: true },
+      },
+    },
+  });
+}
+
+export type PublishedFaqGroup = {
+  category: { id: string; name: string; slug: string } | null;
+  items: PublishedFaq[];
+};
+
+export async function listPublishedFaqGroups(): Promise<{
+  items: PublishedFaq[];
+  groups: PublishedFaqGroup[];
+  categories: Array<{ id: string; name: string; slug: string; count: number }>;
+}> {
+  const items = await listPublishedFaqs({ limit: 100 });
+
+  const categoryMap = new Map<
+    string,
+    { id: string; name: string; slug: string; count: number }
+  >();
+  const uncategorized: PublishedFaq[] = [];
+  const byCategory = new Map<string, PublishedFaq[]>();
+
+  for (const item of items) {
+    if (!item.category) {
+      uncategorized.push(item);
+      continue;
+    }
+    const key = item.category.id;
+    const bucket = byCategory.get(key) ?? [];
+    bucket.push(item);
+    byCategory.set(key, bucket);
+
+    const existing = categoryMap.get(key);
+    if (existing) {
+      existing.count += 1;
+    } else {
+      categoryMap.set(key, {
+        id: item.category.id,
+        name: item.category.name,
+        slug: item.category.slug,
+        count: 1,
+      });
+    }
+  }
+
+  const categories = [...categoryMap.values()].sort((a, b) =>
+    a.name.localeCompare(b.name, "tr"),
+  );
+
+  const groups: PublishedFaqGroup[] = [
+    ...categories.map((category) => ({
+      category: {
+        id: category.id,
+        name: category.name,
+        slug: category.slug,
+      },
+      items: byCategory.get(category.id) ?? [],
+    })),
+  ];
+
+  if (uncategorized.length > 0) {
+    groups.push({ category: null, items: uncategorized });
+  }
+
+  return { items, groups, categories };
+}

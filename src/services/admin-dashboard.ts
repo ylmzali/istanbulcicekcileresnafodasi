@@ -3,8 +3,7 @@ import { prisma } from "@/lib/db";
 export type AdminDashboardStats = {
   pendingApplications: number;
   missingDocumentApplications: number;
-  pendingDocumentRequests: number;
-  todaysAppointments: number;
+  newContactSubmissions: number;
   openSupportRequests: number;
   overdueDues: number;
   recentPosts: Array<{
@@ -16,49 +15,33 @@ export type AdminDashboardStats = {
   }>;
 };
 
-function startOfTodayUtc() {
-  const now = new Date();
-  return new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
-  );
-}
-
-function endOfTodayUtc() {
-  const start = startOfTodayUtc();
-  return new Date(start.getTime() + 24 * 60 * 60 * 1000);
-}
-
 export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
-  const dayStart = startOfTodayUtc();
-  const dayEnd = endOfTodayUtc();
-
   const [
     pendingApplications,
     missingDocumentApplications,
-    pendingDocumentRequests,
-    todaysAppointments,
+    newContactSubmissions,
     openSupportRequests,
     overdueDues,
     recentPosts,
   ] = await Promise.all([
     prisma.membershipApplication.count({
-      where: { status: { in: ["submitted", "under_review"] } },
+      where: {
+        deletedAt: null,
+        status: { in: ["submitted", "under_review"] },
+      },
     }),
     prisma.membershipApplication.count({
-      where: { status: "missing_documents" },
+      where: { deletedAt: null, status: "missing_documents" },
     }),
-    prisma.documentRequest.count({
-      where: { status: { in: ["submitted", "under_review", "payment_pending"] } },
-    }),
-    prisma.appointment.count({
-      where: {
-        startAt: { gte: dayStart, lt: dayEnd },
-        status: { in: ["pending", "confirmed"] },
-      },
+    prisma.contactSubmission.count({
+      where: { status: "new" },
     }),
     prisma.supportRequest.count({
       where: {
-        status: { in: ["new", "assigned", "in_progress", "waiting_for_applicant"] },
+        deletedAt: null,
+        status: {
+          in: ["new", "assigned", "in_progress", "waiting_for_applicant"],
+        },
       },
     }),
     prisma.memberDue.count({
@@ -81,8 +64,7 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
   return {
     pendingApplications,
     missingDocumentApplications,
-    pendingDocumentRequests,
-    todaysAppointments,
+    newContactSubmissions,
     openSupportRequests,
     overdueDues,
     recentPosts,

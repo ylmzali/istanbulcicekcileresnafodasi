@@ -32,6 +32,7 @@ export default async function AdminPanelLayout({
         { href: routes.admin.events, label: a.events },
         { href: routes.admin.faqs, label: a.faqs },
         { href: routes.admin.banners, label: a.banners },
+        { href: routes.admin.resources, label: a.resources },
       ],
     },
     {
@@ -40,11 +41,9 @@ export default async function AdminPanelLayout({
       items: [
         { href: routes.admin.members, label: a.members },
         { href: routes.admin.applications, label: a.applications },
-        { href: routes.admin.documentRequests, label: a.documentRequests },
         { href: routes.admin.dues, label: a.dues },
-        { href: routes.admin.appointments, label: a.appointments },
+        { href: routes.admin.contactSubmissions, label: a.contactSubmissions },
         { href: routes.admin.support, label: a.support },
-        { href: routes.admin.florists, label: a.florists },
       ],
     },
   ];

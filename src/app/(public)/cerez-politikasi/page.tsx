@@ -1,14 +1,12 @@
-import { PagePlaceholder } from "@/components/layout/page-placeholder";
 import type { Metadata } from "next";
+import { LegalDocumentView } from "@/components/content/legal-document";
+import { cookiesDocument } from "@/lib/legal/content";
 
-export const metadata: Metadata = { title: "Çerez Politikası" };
+export const metadata: Metadata = {
+  title: cookiesDocument.title,
+  description: cookiesDocument.description,
+};
 
-export default function CookiesPage() {
-  return (
-    <PagePlaceholder
-      title="Çerez Politikası"
-      description="Çerez politikası metni bu sayfada yayınlanacaktır."
-      breadcrumbs={[{ label: "Çerez Politikası" }]}
-    />
-  );
+export default function CookiesPolicyPage() {
+  return <LegalDocumentView document={cookiesDocument} />;
 }

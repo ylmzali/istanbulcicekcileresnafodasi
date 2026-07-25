@@ -113,6 +113,7 @@ export function SlugInputField({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const helpHint = labels.hint ?? labels.emptyHint;
   const statusMessage =
     status === "checking"
       ? labels.checking
@@ -122,56 +123,62 @@ export function SlugInputField({
           ? labels.taken
           : status === "invalid"
             ? labels.invalid
-            : status === "empty"
-              ? labels.emptyHint
-              : "";
-
-  const hint =
-    status === "taken" || status === "invalid" || status === "checking"
-      ? statusMessage
-      : status === "available"
-        ? statusMessage
-        : status === "empty"
-          ? labels.emptyHint
-          : labels.hint;
+            : "";
 
   return (
-    <Field label={labels.label} htmlFor={id} size={size} hint={hint || undefined}>
-      <div className="relative">
-        <TextInput
-          id={id}
-          name={name}
-          value={value}
-          onChange={(event) => {
-            setValue(event.target.value);
-            if (status !== "idle" && status !== "checking") {
-              setStatus("idle");
+    <Field label={labels.label} htmlFor={id} size={size}>
+      <div className="space-y-1">
+        {helpHint ? (
+          <p className="text-[11px] leading-4 text-[var(--color-text-muted)]">
+            {helpHint}
+          </p>
+        ) : null}
+        <div className="relative">
+          <TextInput
+            format="slug"
+            id={id}
+            name={name}
+            value={value}
+            onChange={(event) => {
+              setValue(event.target.value);
+              if (status !== "idle" && status !== "checking") {
+                setStatus("idle");
+              }
+            }}
+            onBlur={(event) => {
+              void verify(event.target.value);
+            }}
+            autoComplete="off"
+            spellCheck={false}
+            aria-describedby={statusId}
+            aria-invalid={status === "taken" || status === "invalid"}
+            className="pr-9"
+          />
+          <span
+            className="pointer-events-none absolute inset-y-0 right-0 flex w-9 items-center justify-center"
+            aria-hidden
+          >
+            {status === "checking" ? (
+              <SpinnerIcon className="h-4 w-4 animate-spin text-[var(--color-text-muted)]" />
+            ) : status === "available" ? (
+              <CheckIcon className="h-4 w-4 text-[var(--color-primary-700)]" />
+            ) : status === "taken" || status === "invalid" ? (
+              <CloseIcon className="h-4 w-4 text-[var(--color-accent)]" />
+            ) : null}
+          </span>
+          <p
+            id={statusId}
+            className={
+              statusMessage
+                ? "absolute top-[calc(100%+0.25rem)] left-0 z-10 text-[11px] leading-4 text-[var(--color-text-muted)]"
+                : "sr-only"
             }
-          }}
-          onBlur={(event) => {
-            void verify(event.target.value);
-          }}
-          autoComplete="off"
-          spellCheck={false}
-          aria-describedby={statusMessage ? statusId : undefined}
-          aria-invalid={status === "taken" || status === "invalid"}
-          className="pr-9"
-        />
-        <span
-          className="pointer-events-none absolute inset-y-0 right-0 flex w-9 items-center justify-center"
-          aria-hidden
-        >
-          {status === "checking" ? (
-            <SpinnerIcon className="h-4 w-4 animate-spin text-[var(--color-text-muted)]" />
-          ) : status === "available" ? (
-            <CheckIcon className="h-4 w-4 text-[var(--color-primary-700)]" />
-          ) : status === "taken" || status === "invalid" ? (
-            <CloseIcon className="h-4 w-4 text-[var(--color-accent)]" />
-          ) : null}
-        </span>
-        <span id={statusId} className="sr-only" role="status" aria-live="polite">
-          {statusMessage}
-        </span>
+            role="status"
+            aria-live="polite"
+          >
+            {statusMessage}
+          </p>
+        </div>
       </div>
     </Field>
   );

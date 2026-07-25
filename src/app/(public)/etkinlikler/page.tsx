@@ -11,8 +11,8 @@ import {
 import { getMessages } from "@/lib/i18n";
 import { routes } from "@/lib/routes";
 import {
+  getFeaturedPublicEvent,
   listPublishedEvents,
-  listUpcomingEvents,
 } from "@/services/events";
 
 type EventScope = "all" | "upcoming" | "past";
@@ -48,18 +48,15 @@ export default async function EventsPage({ searchParams }: PageProps) {
   const scope = parseScope(params.kapsam);
   const page = Math.max(1, Number(params.page) || 1);
 
-  const [result, nextUpcoming] = await Promise.all([
-    listPublishedEvents({
-      page,
-      pageSize: 12,
-      scope,
-    }),
-    scope !== "past" && page === 1
-      ? listUpcomingEvents(1).then((rows) => rows[0] ?? null)
-      : Promise.resolve(null),
-  ]);
+  const featured =
+    scope !== "past" && page === 1 ? await getFeaturedPublicEvent() : null;
 
-  const featured = nextUpcoming;
+  const result = await listPublishedEvents({
+    page,
+    pageSize: 12,
+    scope,
+    excludeId: featured?.id,
+  });
 
   const emptyMessage =
     scope === "upcoming"
