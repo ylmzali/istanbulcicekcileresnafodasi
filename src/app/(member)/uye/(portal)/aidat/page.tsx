@@ -176,6 +176,14 @@ export default async function MemberDuesPage() {
                     </p>
                   ) : null}
                 </div>
+                {payment.hasReceiptFile && payment.receiptId ? (
+                  <a
+                    href={`/api/member/receipts/${payment.receiptId}/download`}
+                    className="inline-flex h-9 shrink-0 items-center justify-center rounded-[10px] border border-[var(--color-border)] bg-white px-3 text-xs font-semibold text-[var(--color-primary-800)] hover:bg-[var(--color-surface-soft)]"
+                  >
+                    {t.receiptDownload}
+                  </a>
+                ) : null}
               </li>
             ))}
           </ul>

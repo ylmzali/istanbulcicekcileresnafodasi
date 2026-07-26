@@ -253,3 +253,100 @@ summary::-webkit-details-marker {
 [data-admin-app] {
   min-height: 100dvh;
 }
+
+/* TipTap admin editor */
+.rich-text-editor-content {
+  width: 100%;
+}
+
+.rich-text-editor-content p.is-editor-empty:first-child::before {
+  color: var(--color-text-muted);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.rich-text-editor-content :where(p, ul, ol, blockquote, h2, h3) {
+  margin: 0.75rem 0;
+}
+
+.rich-text-editor-content :where(h2) {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-primary-900);
+}
+
+.rich-text-editor-content :where(h3) {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-primary-900);
+}
+
+.rich-text-editor-content :where(ul) {
+  list-style: disc;
+  padding-left: 1.25rem;
+}
+
+.rich-text-editor-content :where(ol) {
+  list-style: decimal;
+  padding-left: 1.25rem;
+}
+
+.rich-text-editor-content :where(a) {
+  color: var(--color-primary-800);
+  text-decoration: underline;
+}
+
+.rich-text-editor-content img.article-inline-image,
+.rich-text-content img.article-inline-image,
+.rich-text-content img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  margin: 1.25rem 0;
+  border-radius: 14px;
+  border: 1px solid var(--color-border);
+}
+
+.rich-text-content :where(p, ul, ol, blockquote, h2, h3) {
+  margin: 0;
+}
+
+.rich-text-content :where(p + p, ul, ol, blockquote, h2, h3) {
+  margin-top: 1.25rem;
+}
+
+.rich-text-content :where(h2) {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--color-primary-900);
+}
+
+.rich-text-content :where(h3) {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-primary-900);
+}
+
+.rich-text-content :where(ul) {
+  list-style: disc;
+  padding-left: 1.25rem;
+}
+
+.rich-text-content :where(ol) {
+  list-style: decimal;
+  padding-left: 1.25rem;
+}
+
+.rich-text-content :where(a) {
+  color: var(--color-primary-800);
+  text-decoration: underline;
+}
+
+.rich-text-content :where(blockquote) {
+  border-left: 3px solid var(--color-primary-100);
+  padding-left: 1rem;
+  color: var(--color-text-muted);
+}

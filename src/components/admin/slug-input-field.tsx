@@ -20,7 +20,7 @@ type Labels = {
   label: string;
   hint?: string;
   checking: string;
-  available: string;
+  available?: string;
   taken: string;
   invalid: string;
   emptyHint: string;
@@ -117,22 +117,17 @@ export function SlugInputField({
   const statusMessage =
     status === "checking"
       ? labels.checking
-      : status === "available"
-        ? labels.available
-        : status === "taken"
-          ? labels.taken
-          : status === "invalid"
-            ? labels.invalid
-            : "";
+      : status === "taken"
+        ? labels.taken
+        : status === "invalid"
+          ? labels.invalid
+          : "";
+
+  const belowText = statusMessage || helpHint || "";
 
   return (
     <Field label={labels.label} htmlFor={id} size={size}>
       <div className="space-y-1">
-        {helpHint ? (
-          <p className="text-[11px] leading-4 text-[var(--color-text-muted)]">
-            {helpHint}
-          </p>
-        ) : null}
         <div className="relative">
           <TextInput
             format="slug"
@@ -166,19 +161,19 @@ export function SlugInputField({
               <CloseIcon className="h-4 w-4 text-[var(--color-accent)]" />
             ) : null}
           </span>
-          <p
-            id={statusId}
-            className={
-              statusMessage
-                ? "absolute top-[calc(100%+0.25rem)] left-0 z-10 text-[11px] leading-4 text-[var(--color-text-muted)]"
-                : "sr-only"
-            }
-            role="status"
-            aria-live="polite"
-          >
-            {statusMessage}
-          </p>
         </div>
+        <p
+          id={statusId}
+          className={
+            belowText
+              ? "text-[11px] leading-4 text-[var(--color-text-muted)]"
+              : "sr-only"
+          }
+          role="status"
+          aria-live="polite"
+        >
+          {belowText}
+        </p>
       </div>
     </Field>
   );

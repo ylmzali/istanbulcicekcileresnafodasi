@@ -17,9 +17,12 @@ import {
   StatusBadge,
   TextInput,
   TextSelect,
-  TextTextarea,
 } from "@/components/admin/form-fields";
 import { ImageUploadField } from "@/components/admin/image-upload-field";
+import {
+  RichTextEditor,
+  type RichTextEditorLabels,
+} from "@/components/admin/rich-text-editor";
 import { SlugInputField } from "@/components/admin/slug-input-field";
 import {
   CalendarIcon,
@@ -28,6 +31,7 @@ import {
   UsersIcon,
 } from "@/components/ui/icons";
 import { eventHref } from "@/lib/content-paths";
+import { sanitizeArticleHtml, stripHtml } from "@/lib/html-sanitize";
 import { routes } from "@/lib/routes";
 
 type EventFormValues = {
@@ -35,7 +39,6 @@ type EventFormValues = {
   title: string;
   slug: string;
   description: string;
-  eventType: string;
   location: string;
   isOnline: boolean;
   onlineUrl: string;
@@ -62,7 +65,6 @@ type Labels = {
   content: string;
   status: string;
   featured: string;
-  eventType: string;
   location: string;
   isOnline: string;
   onlineUrl: string;
@@ -85,12 +87,14 @@ type Labels = {
   preview: string;
   eventPreviewEmpty: string;
   eventSectionBasic: string;
+  eventSectionContent: string;
   eventSectionSchedule: string;
   eventSectionVenue: string;
   eventSectionMedia: string;
   eventRegistrations: string;
   eventViewPublic: string;
   online: string;
+  editor: RichTextEditorLabels;
   save: string;
   delete: string;
   back: string;
@@ -142,7 +146,6 @@ export function EventForm({
 
   const [title, setTitle] = useState(values.title);
   const [description, setDescription] = useState(values.description);
-  const [eventType, setEventType] = useState(values.eventType);
   const [location, setLocation] = useState(values.location);
   const [isOnline, setIsOnline] = useState(values.isOnline);
   const [startsAt, setStartsAt] = useState(toDatetimeLocal(values.startsAt));
@@ -157,6 +160,10 @@ export function EventForm({
   const locationLabel = isOnline
     ? labels.online
     : location.trim() || null;
+  const previewDescription = useMemo(
+    () => stripHtml(description),
+    [description],
+  );
 
   return (
     <form action={formAction} className="space-y-3">
@@ -192,15 +199,6 @@ export function EventForm({
                   ))}
                 </TextSelect>
               </Field>
-              <Field label={labels.eventType} htmlFor="eventType" size="lg">
-                <TextInput
-                  id="eventType"
-                  name="eventType"
-                  value={eventType}
-                  onChange={(event) => setEventType(event.target.value)}
-                  placeholder="Eğitim, seminer…"
-                />
-              </Field>
               <SlugInputField
                 defaultValue={values.slug}
                 scope="event"
@@ -218,24 +216,28 @@ export function EventForm({
               />
             </div>
 
-            <Field label={labels.content} htmlFor="description" size="xl">
-              <TextTextarea
-                  format="multiline"
-                id="description"
-                name="description"
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                rows={7}
-                className="min-h-28"
-              />
-            </Field>
-
             <Checkbox
               id="featured"
               name="featured"
               label={labels.featured}
               defaultChecked={values.featured}
             />
+          </AdminFormCard>
+
+          <AdminFormCard className="space-y-4">
+            <SectionTitle>{labels.eventSectionContent}</SectionTitle>
+            <Field label={labels.content} htmlFor="description" size="full">
+              <RichTextEditor
+                id="description"
+                name="description"
+                value={description}
+                onChange={(html) =>
+                  setDescription(sanitizeArticleHtml(html))
+                }
+                labels={labels.editor}
+                className="min-h-[420px]"
+              />
+            </Field>
           </AdminFormCard>
 
           <AdminFormCard className="space-y-4">
@@ -413,19 +415,13 @@ export function EventForm({
               </div>
             )}
 
-            {eventType.trim() ? (
-              <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--color-primary-800)]">
-                {eventType}
-              </p>
-            ) : null}
-
             <h2 className="text-lg font-semibold leading-snug text-[var(--color-text)]">
               {title.trim() || "—"}
             </h2>
 
-            {description.trim() ? (
+            {previewDescription ? (
               <p className="line-clamp-4 text-sm leading-relaxed text-[var(--color-text-muted)]">
-                {description}
+                {previewDescription}
               </p>
             ) : (
               <p className="text-sm text-[var(--color-text-muted)]">

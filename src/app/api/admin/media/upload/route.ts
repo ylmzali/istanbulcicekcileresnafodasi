@@ -11,6 +11,7 @@ import { uploadPublicImage } from "@/services/media";
 const presetSchema = z.enum([
   "post-cover",
   "event-cover",
+  "article-inline",
   "hero-desktop",
   "hero-mobile",
   "hero-media",

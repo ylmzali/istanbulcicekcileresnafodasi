@@ -167,7 +167,6 @@ export async function saveEventAction(
     title: str(formData, "title"),
     slug: nullable(formData, "slug") ?? undefined,
     description: nullable(formData, "description"),
-    eventType: nullable(formData, "eventType"),
     location: nullable(formData, "location"),
     isOnline: boolFromForm(formData.get("isOnline")),
     onlineUrl: nullable(formData, "onlineUrl"),

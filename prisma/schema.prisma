@@ -666,12 +666,15 @@ model PaymentAllocation {
 }
 
 model Receipt {
-  id        String   @id @default(cuid())
-  paymentId String   @unique @map("payment_id")
-  receiptNo String   @unique @map("receipt_no") @db.VarChar(60)
-  issuedAt  DateTime @map("issued_at")
-  fileKey   String?  @map("file_key") @db.VarChar(500)
-  createdAt DateTime @default(now()) @map("created_at")
+  id               String   @id @default(cuid())
+  paymentId        String   @unique @map("payment_id")
+  receiptNo        String   @unique @map("receipt_no") @db.VarChar(60)
+  issuedAt         DateTime @map("issued_at")
+  fileKey          String?  @map("file_key") @db.VarChar(500)
+  originalFilename String?  @map("original_filename") @db.VarChar(255)
+  mimeType         String?  @map("mime_type") @db.VarChar(120)
+  fileSize         Int?     @map("file_size")
+  createdAt        DateTime @default(now()) @map("created_at")
 
   payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
 

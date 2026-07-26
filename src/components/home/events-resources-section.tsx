@@ -1,6 +1,7 @@
 import { CalendarIcon, DownloadIcon } from "@/components/ui/icons";
 import { eventHref } from "@/lib/content-paths";
 import { formatEventDayParts } from "@/lib/datetime";
+import { stripHtml } from "@/lib/html-sanitize";
 import { getMessages } from "@/lib/i18n";
 import { routes } from "@/lib/routes";
 import type { PublicResourceItem } from "@/services/resources";
@@ -11,7 +12,6 @@ export type HomeEventItem = {
   title: string;
   slug: string;
   description: string | null;
-  eventType: string | null;
   location: string | null;
   isOnline: boolean;
   startsAt: Date;
@@ -53,7 +53,6 @@ export function EventsResourcesSection({
               events.map((event) => {
                 const parts = formatEventDayParts(event.startsAt);
                 const meta = [
-                  event.eventType,
                   event.isOnline ? messages.events.online : event.location,
                 ]
                   .filter(Boolean)
@@ -78,7 +77,11 @@ export function EventsResourcesSection({
                         {event.title}
                       </p>
                       <p className="mt-1 line-clamp-2 text-xs text-[var(--color-text-muted)]">
-                        {meta || event.description || messages.events.details}
+                        {meta ||
+                          (event.description
+                            ? stripHtml(event.description)
+                            : "") ||
+                          messages.events.details}
                       </p>
                     </div>
                   </Link>

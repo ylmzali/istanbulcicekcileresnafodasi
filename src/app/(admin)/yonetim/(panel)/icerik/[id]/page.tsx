@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PostForm } from "@/components/admin/post-form";
 import { AdminPageHeader } from "@/components/admin/form-fields";
-import { getMessages } from "@/lib/i18n";
+import { getAdminEditorLabels } from "@/lib/admin-editor-labels";
 import { getAdminUploadLabels } from "@/lib/admin-upload-labels";
+import { getMessages } from "@/lib/i18n";
 import { getPostById } from "@/services/posts";
 
 type PageProps = {
@@ -71,6 +72,7 @@ export default async function AdminEditPostPage({ params }: PageProps) {
           postSectionSchedule: a.postSectionSchedule,
           postSectionSeo: a.postSectionSeo,
           postViewPublic: a.postViewPublic,
+          editor: getAdminEditorLabels(),
           save: a.save,
           delete: a.delete,
           back: a.back,

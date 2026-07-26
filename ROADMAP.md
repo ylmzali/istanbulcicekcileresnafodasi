@@ -3,7 +3,7 @@
 Bu dosya, mevcut kod tabanı taramasına göre ürün kurallarıyla (`AGENTS.md` / `.cursor/rules`) hizalı geliştirme yol haritasını tanımlar.
 
 Son güncelleme: 2026-07-25  
-**Aktif faz:** Faz 4 devam — Aidat makbuz PDF / ters kayıt (belge/randevu/rehber kapsam dışı)
+**Aktif faz:** Faz 4 devam — Aidat ters kayıt (makbuz: admin yükleme)
 
 ---
 
@@ -17,7 +17,7 @@ Son güncelleme: 2026-07-25
 | Yönetim: içerik, üyeler, aidat tahakkuk/tahsilat/muafiyet | Çalışıyor              |
 | Yönetici girişi                                        | Çalışıyor (`super_admin` + izin iskeleti) |
 | Üye girişi / üye paneli                                | ✅ Faz 1 tamamlandı       |
-| Üye aidat defteri                                      | ✅ Temel defter tamamlandı (makbuz PDF sonra) |
+| Üye aidat defteri                                      | ✅ Defter + admin makbuz yükleme              |
 | Üyelik başvurusu                                       | ✅ Faz 2 tamamlandı (e-posta bildirimi sonra) |
 | Destek / bilgi edinme                                  | ✅ Faz 6 tamamlandı       |
 | İletişim formu, site araması, KVKK metinleri           | ✅ Faz 0 tamamlandı       |
@@ -37,7 +37,7 @@ Son güncelleme: 2026-07-25
 
 ### Ana boşluklar
 
-- Aidat makbuz PDF / ters kayıt / online ödeme
+- Aidat ters kayıt / online ödeme (makbuz: admin yükleme)
 - Kritik mutasyon audit’i ve yönetici 2FA eksik
 - Test suite yok
 
@@ -53,11 +53,11 @@ Faz 1  Üye auth + yetki iskeleti          ✅ tamamlandı
     → Faz 0  Kamu güveni (iletişim, yasal, chrome)  ✅ tamamlandı
       → Faz 2  Üyelik başvurusu  ✅ tamamlandı
         → Faz 6  Destek / bilgi edinme / dilek-şikâyet  ✅ tamamlandı
-          → Faz 4 kalan (makbuz PDF / ters kayıt)  ← ŞİMDİ
+          → Faz 4 kalan (ters kayıt; makbuz admin yükleme ✅)  ← ŞİMDİ
             → Faz 8  Operasyon, güvenlik, test
 ```
 
-> Not: Evrak doğrulama, belge talebi, randevu ve rehber ürün kapsamından çıkarıldı.
+> Not: Evrak doğrulama, belge talebi, randevu ürün kapsamından çıkarıldı. Rehber geri alındı.
 
 ---
 
@@ -153,7 +153,7 @@ Faz 1  Üye auth + yetki iskeleti          ✅ tamamlandı
 ## Faz 4 — Aidatı tamamla
 
 **Amaç:** Admin tahsilatını üye görünürlüğü ve (ileride) online ödeme ile birleştirmek.  
-**Durum:** Temel üye defteri tamamlandı; makbuz PDF / ters kayıt / online ödeme bekliyor
+**Durum:** Üye defteri + admin makbuz/fatura yükleme tamam; ters kayıt / online ödeme bekliyor
 
 ### Hazır olanlar (admin)
 
@@ -173,7 +173,7 @@ Faz 1  Üye auth + yetki iskeleti          ✅ tamamlandı
 
 ### Sonraki alt adımlar
 
-- [ ] Makbuz PDF indirme
+- [x] Makbuz / fatura: admin yükler, üye indirir (sistem PDF üretmez)
 - [ ] Ters kayıt / düzeltme hareketi (silme yok)
 - [ ] Vade/gecikme kurallarının netleştirilmesi
 - [ ] Online ödeme adapter + webhook + idempotency → `feature_flags` arkasında
@@ -300,7 +300,7 @@ Bunlar `feature_flags` + adapter arkasında beklemelidir (kapsam dışı olanlar
 
 ## Sonraki adım (güncel)
 
-1. **Faz 4 devam** — Makbuz PDF; ters kayıt; (sonra) online ödeme ← sıradaki
+1. **Faz 4 devam** — Ters kayıt; (sonra) online ödeme ← sıradaki
 2. **Faz 8** — Audit genişletme, 2FA, test suite
 3. Online ödeme — yalnızca gerçek PSP + webhook + feature flag ile
 

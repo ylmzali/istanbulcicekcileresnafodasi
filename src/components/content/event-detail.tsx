@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { EventAddToCalendarButton } from "@/components/content/event-calendar-button";
+import { RichTextContent } from "@/components/content/post-list";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
 import {
   CalendarIcon,
@@ -11,15 +12,21 @@ import {
 } from "@/components/ui/icons";
 import type { Event } from "@/generated/prisma/client";
 import { eventHref } from "@/lib/content-paths";
-import {
-  formatDate,
-  formatDateTime,
-  formatTime,
-} from "@/lib/datetime";
+import { formatDateTime } from "@/lib/datetime";
+import { stripHtml } from "@/lib/html-sanitize";
 import { getMessages, t } from "@/lib/i18n";
+import { getInputFormat } from "@/lib/input-formats";
 import { routes } from "@/lib/routes";
 import { siteConfig } from "@/lib/site";
 import { cn } from "@/lib/utils";
+
+function resolveExternalUrl(value: string | null | undefined) {
+  const trimmed = value?.trim() ?? "";
+  if (!trimmed) return null;
+  const formatted = getInputFormat("url").format(trimmed);
+  if (!formatted || !/^https?:\/\//i.test(formatted)) return null;
+  return formatted;
+}
 
 export async function EventDetailView({ event }: { event: Event }) {
   const messages = getMessages();
@@ -27,6 +34,8 @@ export async function EventDetailView({ event }: { event: Event }) {
   const locationLabel = event.isOnline
     ? messages.events.online
     : event.location;
+  const onlineJoinUrl =
+    event.isOnline ? resolveExternalUrl(event.onlineUrl) : null;
   const baseUrl = (
     process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3001"
   ).replace(/\/$/, "");
@@ -35,28 +44,21 @@ export async function EventDetailView({ event }: { event: Event }) {
   const facts = [
     {
       icon: CalendarIcon,
-      label: messages.events.when,
-      value: formatDate(event.startsAt),
-    },
-    {
-      icon: ClockIcon,
       label: messages.events.startsAt,
-      value: `${formatTime(event.startsAt)}${
-        event.endsAt ? ` – ${formatTime(event.endsAt)}` : ""
-      }`,
+      value: formatDateTime(event.startsAt),
     },
+    event.endsAt
+      ? {
+          icon: ClockIcon,
+          label: messages.events.endsAt,
+          value: formatDateTime(event.endsAt),
+        }
+      : null,
     locationLabel
       ? {
           icon: MapPinIcon,
           label: messages.events.location,
           value: locationLabel,
-        }
-      : null,
-    event.eventType
-      ? {
-          icon: CalendarIcon,
-          label: messages.events.type,
-          value: event.eventType,
         }
       : null,
     event.capacity
@@ -68,17 +70,35 @@ export async function EventDetailView({ event }: { event: Event }) {
           }),
         }
       : null,
+    event.registrationOpen
+      ? {
+          icon: CalendarIcon,
+          label: messages.events.registrationOpen,
+          value: formatDateTime(event.registrationOpen),
+        }
+      : null,
+    event.registrationClose
+      ? {
+          icon: ClockIcon,
+          label: messages.events.registrationClose,
+          value: formatDateTime(event.registrationClose),
+        }
+      : null,
   ].filter(Boolean) as Array<{
     icon: typeof CalendarIcon;
     label: string;
     value: string;
   }>;
 
+  const plainDescription = event.description
+    ? stripHtml(event.description)
+    : "";
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Event",
     name: event.title,
-    description: event.description || undefined,
+    description: plainDescription || undefined,
     image: event.coverImage ? [event.coverImage] : undefined,
     startDate: event.startsAt.toISOString(),
     endDate: event.endsAt?.toISOString(),
@@ -155,11 +175,6 @@ export async function EventDetailView({ event }: { event: Event }) {
                         ? messages.events.upcomingBadge
                         : messages.events.pastBadge}
                     </span>
-                    {event.eventType ? (
-                      <span className="text-sm text-[var(--color-text-muted)]">
-                        {event.eventType}
-                      </span>
-                    ) : null}
                   </div>
 
                   <h1 className="mt-4 text-balance text-[1.85rem] font-bold tracking-[-0.025em] text-[var(--color-primary-900)] sm:text-[2.5rem] sm:leading-[1.15]">
@@ -179,8 +194,11 @@ export async function EventDetailView({ event }: { event: Event }) {
                     {messages.events.about}
                   </h2>
                   {event.description ? (
-                    <div className="mt-4 space-y-5 whitespace-pre-wrap text-[17px] leading-[1.8] tracking-[-0.01em] text-[var(--color-text)]">
-                      {event.description}
+                    <div className="mt-4">
+                      <RichTextContent
+                        content={event.description}
+                        variant="article"
+                      />
                     </div>
                   ) : (
                     <p className="mt-4 text-sm text-[var(--color-text-muted)]">
@@ -225,22 +243,34 @@ export async function EventDetailView({ event }: { event: Event }) {
                 ))}
               </dl>
 
-              {upcoming ? (
-                <div className="mt-5 border-t border-[var(--color-border)] pt-5">
-                  <EventAddToCalendarButton
-                    title={event.title}
-                    description={event.description}
-                    location={
-                      event.isOnline
-                        ? messages.events.online
-                        : event.location
-                    }
-                    startsAt={event.startsAt.toISOString()}
-                    endsAt={event.endsAt?.toISOString() ?? null}
-                    url={detailUrl}
-                    uid={`${event.id}@istanbulcicekcileresnafodasi`}
-                    label={messages.events.addToCalendar}
-                  />
+              {onlineJoinUrl || upcoming ? (
+                <div className="mt-5 space-y-2.5 border-t border-[var(--color-border)] pt-5">
+                  {onlineJoinUrl ? (
+                    <a
+                      href={onlineJoinUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex h-11 w-full items-center justify-center rounded-[10px] bg-[var(--color-primary-800)] px-4 text-sm font-semibold text-white transition hover:bg-[var(--color-primary-700)]"
+                    >
+                      {messages.events.joinOnline}
+                    </a>
+                  ) : null}
+                  {upcoming ? (
+                    <EventAddToCalendarButton
+                      title={event.title}
+                      description={plainDescription || null}
+                      location={
+                        event.isOnline
+                          ? messages.events.online
+                          : event.location
+                      }
+                      startsAt={event.startsAt.toISOString()}
+                      endsAt={event.endsAt?.toISOString() ?? null}
+                      url={detailUrl}
+                      uid={`${event.id}@istanbulcicekcileresnafodasi`}
+                      label={messages.events.addToCalendar}
+                    />
+                  ) : null}
                 </div>
               ) : null}
             </div>

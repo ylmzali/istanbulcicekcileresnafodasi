@@ -12,6 +12,7 @@ import {
   formatEventDayParts,
   formatTime,
 } from "@/lib/datetime";
+import { stripHtml } from "@/lib/html-sanitize";
 import { getMessages, t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -20,7 +21,6 @@ export type PublicEventCard = {
   title: string;
   slug: string;
   description: string | null;
-  eventType: string | null;
   location: string | null;
   isOnline: boolean;
   startsAt: Date;
@@ -127,11 +127,6 @@ export function EventFeaturedCard({ event }: { event: PublicEventCard }) {
               {messages.events.nextEvent}
             </p>
             <EventStatusBadge upcoming={upcoming} />
-            {event.eventType ? (
-              <span className="rounded-md bg-[var(--color-surface-soft)] px-2 py-0.5 text-[11px] font-medium text-[var(--color-text-muted)]">
-                {event.eventType}
-              </span>
-            ) : null}
           </div>
 
           <h2 className="mt-3 text-balance text-2xl font-semibold tracking-tight text-[var(--color-primary-900)] sm:text-[1.7rem] sm:leading-snug">
@@ -140,7 +135,7 @@ export function EventFeaturedCard({ event }: { event: PublicEventCard }) {
 
           {event.description ? (
             <p className="mt-3 line-clamp-3 text-[15px] leading-7 text-[var(--color-text-muted)]">
-              {event.description}
+              {stripHtml(event.description)}
             </p>
           ) : null}
 
@@ -200,11 +195,6 @@ export function EventAgendaRow({ event }: { event: PublicEventCard }) {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <EventStatusBadge upcoming={upcoming} />
-            {event.eventType ? (
-              <span className="text-[11px] font-medium text-[var(--color-text-muted)]">
-                {event.eventType}
-              </span>
-            ) : null}
           </div>
 
           <h2 className="mt-1.5 text-base font-semibold leading-snug tracking-tight text-[var(--color-text)] transition group-hover:text-[var(--color-primary-800)] sm:text-[1.05rem]">
@@ -213,7 +203,7 @@ export function EventAgendaRow({ event }: { event: PublicEventCard }) {
 
           {event.description ? (
             <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-[var(--color-text-muted)]">
-              {event.description}
+              {stripHtml(event.description)}
             </p>
           ) : null}
 
@@ -280,11 +270,6 @@ export function EventCard({ event }: { event: PublicEventCard }) {
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <EventStatusBadge upcoming={upcoming} />
-                {event.eventType ? (
-                  <span className="text-[11px] font-medium text-[var(--color-text-muted)]">
-                    {event.eventType}
-                  </span>
-                ) : null}
               </div>
               <h2 className="mt-2 line-clamp-2 text-[1.05rem] font-semibold leading-snug tracking-tight text-[var(--color-text)] group-hover:text-[var(--color-primary-800)]">
                 {event.title}
@@ -294,7 +279,7 @@ export function EventCard({ event }: { event: PublicEventCard }) {
 
           {event.description ? (
             <p className="mt-3 line-clamp-2 text-sm leading-6 text-[var(--color-text-muted)]">
-              {event.description}
+              {stripHtml(event.description)}
             </p>
           ) : null}
 

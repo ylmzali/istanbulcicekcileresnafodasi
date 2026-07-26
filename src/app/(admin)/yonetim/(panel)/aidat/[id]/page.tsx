@@ -7,6 +7,7 @@ import {
   AdminPageHeader,
   StatusBadge,
 } from "@/components/admin/form-fields";
+import { ReceiptUploadForm } from "@/components/admin/receipt-upload-form";
 import { formatDate, formatDateTime } from "@/lib/datetime";
 import { formatMoney, remainingDueAmount } from "@/lib/money";
 import { getMessages } from "@/lib/i18n";
@@ -118,34 +119,62 @@ export default async function AdminDueDetailPage({ params }: PageProps) {
           <p className="text-sm text-[var(--color-text-muted)]">{a.empty}</p>
         ) : (
           <ul className="divide-y divide-[var(--color-border)]">
-            {due.allocations.map((item) => (
-              <li
-                key={item.id}
-                className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
-              >
-                <div>
-                  <p className="font-medium text-[var(--color-text)]">
-                    {formatMoney(item.amount)}
-                  </p>
-                  <p className="text-xs text-[var(--color-text-muted)]">
-                    {a.duesMethods[
-                      item.payment.method as keyof typeof a.duesMethods
-                    ] ?? item.payment.method}
-                    {item.payment.paidAt
-                      ? ` · ${formatDateTime(item.payment.paidAt)}`
-                      : ""}
-                    {item.payment.receipt
-                      ? ` · ${a.duesReceiptNo}: ${item.payment.receipt.receiptNo}`
-                      : ""}
-                  </p>
-                  {item.payment.note ? (
-                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-                      {item.payment.note}
-                    </p>
-                  ) : null}
-                </div>
-              </li>
-            ))}
+            {due.allocations.map((item) => {
+              const receipt = item.payment.receipt;
+              const hasFile = Boolean(receipt?.fileKey);
+              return (
+                <li
+                  key={item.id}
+                  className="space-y-3 py-3 first:pt-0 last:pb-0"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="font-medium text-[var(--color-text)]">
+                        {formatMoney(item.amount)}
+                      </p>
+                      <p className="text-xs text-[var(--color-text-muted)]">
+                        {a.duesMethods[
+                          item.payment.method as keyof typeof a.duesMethods
+                        ] ?? item.payment.method}
+                        {item.payment.paidAt
+                          ? ` · ${formatDateTime(item.payment.paidAt)}`
+                          : ""}
+                        {receipt
+                          ? ` · ${a.duesReceiptNo}: ${receipt.receiptNo}`
+                          : ""}
+                      </p>
+                      {item.payment.note ? (
+                        <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                          {item.payment.note}
+                        </p>
+                      ) : null}
+                      {!hasFile ? (
+                        <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                          {a.duesReceiptMissing}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+                  <ReceiptUploadForm
+                    paymentId={item.payment.id}
+                    dueId={due.id}
+                    hasFile={hasFile}
+                    downloadHref={
+                      receipt
+                        ? `/api/admin/receipts/${receipt.id}/download`
+                        : null
+                    }
+                    labels={{
+                      upload: a.duesReceiptUpload,
+                      replace: a.duesReceiptReplace,
+                      download: a.duesReceiptDownload,
+                      choose: a.duesReceiptChoose,
+                      hint: a.duesReceiptHint,
+                    }}
+                  />
+                </li>
+              );
+            })}
           </ul>
         )}
       </AdminFormCard>

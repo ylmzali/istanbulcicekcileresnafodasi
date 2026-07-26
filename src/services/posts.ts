@@ -6,6 +6,7 @@ import {
   type HomeNewsItemDto,
   type HomeNewsTab,
 } from "@/lib/home-news";
+import { sanitizeArticleHtml } from "@/lib/html-sanitize";
 import { resolveEntitySlug } from "@/lib/resolve-slug";
 
 export type { HomeNewsTab };
@@ -24,7 +25,17 @@ export const postInputSchema = z.object({
   title: z.string().trim().min(1).max(255),
   slug: z.string().trim().optional(),
   excerpt: z.string().trim().max(2000).optional().nullable(),
-  content: z.string().trim().optional().nullable(),
+  content: z
+    .string()
+    .trim()
+    .max(100_000)
+    .optional()
+    .nullable()
+    .transform((value) => {
+      if (!value) return null;
+      const clean = sanitizeArticleHtml(value);
+      return clean || null;
+    }),
   coverImage: z.string().trim().max(500).optional().nullable(),
   status: contentStatusSchema.default("draft"),
   featured: z.boolean().default(false),

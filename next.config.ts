@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // Receipt / document uploads via Server Actions (PDF/görsel, max ~10 MB + multipart overhead).
+    serverActions: {
+      bodySizeLimit: "12mb",
+    },
+    proxyClientMaxBodySize: "12mb",
+  },
   images: {
     localPatterns: [
       {

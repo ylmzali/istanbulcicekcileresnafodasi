@@ -1,14 +1,24 @@
 import { z } from "zod";
 import type { ContentStatus } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db";
+import { sanitizeArticleHtml } from "@/lib/html-sanitize";
 import { resolveEntitySlug } from "@/lib/resolve-slug";
 import { contentStatusSchema } from "@/services/posts";
 
 export const eventInputSchema = z.object({
   title: z.string().trim().min(1).max(255),
   slug: z.string().trim().optional(),
-  description: z.string().trim().optional().nullable(),
-  eventType: z.string().trim().max(80).optional().nullable(),
+  description: z
+    .string()
+    .trim()
+    .max(100_000)
+    .optional()
+    .nullable()
+    .transform((value) => {
+      if (!value) return null;
+      const clean = sanitizeArticleHtml(value);
+      return clean || null;
+    }),
   location: z.string().trim().max(255).optional().nullable(),
   isOnline: z.boolean().default(false),
   onlineUrl: z.string().trim().max(500).optional().nullable(),
@@ -162,7 +172,7 @@ export async function createEvent(raw: EventInput) {
       title: input.title,
       slug,
       description: input.description || null,
-      eventType: input.eventType || null,
+      eventType: null,
       location: input.location || null,
       isOnline: input.isOnline,
       onlineUrl: input.onlineUrl || null,
@@ -201,7 +211,7 @@ export async function updateEvent(id: string, raw: EventInput) {
       title: input.title,
       slug,
       description: input.description || null,
-      eventType: input.eventType || null,
+      eventType: null,
       location: input.location || null,
       isOnline: input.isOnline,
       onlineUrl: input.onlineUrl || null,
@@ -318,7 +328,6 @@ const publicEventSelect = {
   title: true,
   slug: true,
   description: true,
-  eventType: true,
   location: true,
   isOnline: true,
   startsAt: true,

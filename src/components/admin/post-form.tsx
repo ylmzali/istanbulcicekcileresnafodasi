@@ -20,7 +20,12 @@ import {
   TextTextarea,
 } from "@/components/admin/form-fields";
 import { ImageUploadField } from "@/components/admin/image-upload-field";
+import {
+  RichTextEditor,
+  type RichTextEditorLabels,
+} from "@/components/admin/rich-text-editor";
 import { SlugInputField } from "@/components/admin/slug-input-field";
+import { sanitizeArticleHtml } from "@/lib/html-sanitize";
 import { CalendarIcon, ClockIcon } from "@/components/ui/icons";
 import { postHref } from "@/lib/content-paths";
 import { buildSeoDescription, buildSeoTitle } from "@/lib/seo";
@@ -81,6 +86,7 @@ type Labels = {
   postSectionSchedule: string;
   postSectionSeo: string;
   postViewPublic: string;
+  editor: RichTextEditorLabels;
   save: string;
   delete: string;
   back: string;
@@ -259,7 +265,7 @@ export function PostForm({
           <AdminFormCard className="space-y-4">
             <SectionTitle>{labels.postSectionContent}</SectionTitle>
 
-            <Field label={labels.excerpt} htmlFor="excerpt" size="xl">
+            <Field label={labels.excerpt} htmlFor="excerpt" size="full">
               <TextTextarea
                   format="excerpt"
                 id="excerpt"
@@ -270,15 +276,14 @@ export function PostForm({
               />
             </Field>
 
-            <Field label={labels.content} htmlFor="content" size="xl">
-              <TextTextarea
-                  format="articleBody"
+            <Field label={labels.content} htmlFor="content" size="full">
+              <RichTextEditor
                 id="content"
                 name="content"
                 value={content}
-                onChange={(event) => setContent(event.target.value)}
-                rows={10}
-                className="min-h-40"
+                onChange={(html) => setContent(sanitizeArticleHtml(html))}
+                labels={labels.editor}
+                className="min-h-[420px]"
               />
             </Field>
           </AdminFormCard>

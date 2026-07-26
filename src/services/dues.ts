@@ -10,6 +10,10 @@ import {
   parseMoneyNumber,
 } from "@/lib/input-formats";
 import {
+  deleteReceiptFile,
+  storeReceiptFile,
+} from "@/lib/media/receipt-storage";
+import {
   decimalToNumber,
   formatMoney,
   remainingDueAmount,
@@ -494,7 +498,9 @@ export async function getMemberDuesLedger(memberId: string) {
       amountLabel: formatMoney(payment.amount),
       method: payment.method,
       paidAt: payment.paidAt,
+      receiptId: payment.receipt?.id ?? null,
       receiptNo: payment.receipt?.receiptNo ?? null,
+      hasReceiptFile: Boolean(payment.receipt?.fileKey),
       note: payment.note,
       periodTitles: payment.allocations.map(
         (item) => item.memberDue.period.title,
@@ -665,4 +671,88 @@ export function serializePeriodForForm(
     ),
     active: period.active,
   };
+}
+
+/** Attach or replace an uploaded makbuz/fatura file on a payment receipt. */
+export async function attachReceiptFile(input: {
+  paymentId: string;
+  buffer: Buffer;
+  originalName: string;
+  mimeType: string;
+}) {
+  const payment = await prisma.payment.findUnique({
+    where: { id: input.paymentId },
+    include: { receipt: true },
+  });
+  if (!payment) throw new Error("NOT_FOUND");
+  if (payment.status !== "paid") throw new Error("PAYMENT_NOT_PAID");
+
+  let receipt = payment.receipt;
+  if (!receipt) {
+    receipt = await prisma.$transaction(async (tx) =>
+      tx.receipt.create({
+        data: {
+          paymentId: payment.id,
+          receiptNo: await nextReceiptNo(tx),
+          issuedAt: payment.paidAt ?? new Date(),
+        },
+      }),
+    );
+  }
+
+  const saved = await storeReceiptFile({
+    buffer: input.buffer,
+    originalName: input.originalName,
+    mimeType: input.mimeType,
+  });
+
+  const previousKey = receipt.fileKey;
+  const updated = await prisma.receipt.update({
+    where: { id: receipt.id },
+    data: {
+      fileKey: saved.storageKey,
+      originalFilename: input.originalName.trim().slice(0, 255) || saved.filename,
+      mimeType: saved.mimeType,
+      fileSize: saved.size,
+    },
+  });
+
+  if (previousKey && previousKey !== saved.storageKey) {
+    await deleteReceiptFile(previousKey);
+  }
+
+  return updated;
+}
+
+export async function getReceiptFileForAdmin(receiptId: string) {
+  return prisma.receipt.findUnique({
+    where: { id: receiptId },
+    select: {
+      id: true,
+      fileKey: true,
+      originalFilename: true,
+      mimeType: true,
+      receiptNo: true,
+      payment: { select: { id: true, memberId: true } },
+    },
+  });
+}
+
+export async function getReceiptFileForMember(input: {
+  receiptId: string;
+  memberId: string;
+}) {
+  return prisma.receipt.findFirst({
+    where: {
+      id: input.receiptId,
+      payment: { memberId: input.memberId, status: "paid" },
+    },
+    select: {
+      id: true,
+      fileKey: true,
+      originalFilename: true,
+      mimeType: true,
+      receiptNo: true,
+    },
+  });
 }

@@ -52,12 +52,13 @@ export function formatEventDayParts(value: Date | string) {
   };
 }
 
-/** Rough reading time for plain-text articles (~200 wpm, Turkish). */
+/** Rough reading time for plain-text / HTML articles (~200 wpm, Turkish). */
 export function estimateReadingMinutes(
   ...parts: Array<string | null | undefined>
 ) {
   const words = parts
     .filter((part): part is string => Boolean(part?.trim()))
+    .map((part) => part.replace(/<[^>]+>/g, " "))
     .join(" ")
     .trim()
     .split(/\s+/)

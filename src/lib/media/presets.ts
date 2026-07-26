@@ -1,6 +1,7 @@
 export type MediaPresetId =
   | "post-cover"
   | "event-cover"
+  | "article-inline"
   | "hero-desktop"
   | "hero-mobile"
   | "hero-media"
@@ -43,6 +44,15 @@ export const MEDIA_PRESETS: Record<MediaPresetId, MediaPreset> = {
     maxHeight: 900,
     quality: 95,
     lossless: true,
+    fit: "inside",
+  },
+  "article-inline": {
+    id: "article-inline",
+    folder: "articles",
+    aspect: 16 / 9,
+    maxWidth: 1400,
+    maxHeight: 1400,
+    quality: 90,
     fit: "inside",
   },
   "hero-desktop": {

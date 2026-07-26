@@ -8,6 +8,7 @@ import { requireAdminPermission } from "@/lib/auth/permissions";
 import { routes } from "@/lib/routes";
 import {
   assessDuesPeriod,
+  attachReceiptFile,
   collectMemberDuePayment,
   createDuesPeriod,
   syncOpenMemberDuesForPeriod,
@@ -70,6 +71,14 @@ function duesErrorMessage(error: unknown, fallback: string) {
         return "Bu kayıt muaf değil.";
       case "INVALID_DATE":
         return "Geçersiz tarih.";
+      case "PAYMENT_NOT_PAID":
+        return "Yalnızca ödenmiş tahsilata makbuz yüklenebilir.";
+      case "INVALID_MIME":
+        return "Yalnızca PDF veya görsel (JPG, PNG, WEBP) yüklenebilir.";
+      case "FILE_TOO_LARGE":
+        return "Dosya en fazla 10 MB olabilir.";
+      case "NO_FILE":
+        return "Lütfen bir dosya seçin.";
       default:
         break;
     }
@@ -223,5 +232,35 @@ export async function unwaiveDueAction(dueId: string): Promise<ActionState> {
     return { success: true, message: "Muafiyet kaldırıldı." };
   } catch (error) {
     return { error: duesErrorMessage(error, "Muafiyet kaldırılamadı.") };
+  }
+}
+
+export async function uploadReceiptFileAction(
+  paymentId: string,
+  dueId: string,
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  await assertDuesCollect();
+
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size <= 0) {
+    return { error: duesErrorMessage(new Error("NO_FILE"), "Dosya seçin.") };
+  }
+
+  try {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    await attachReceiptFile({
+      paymentId,
+      buffer,
+      originalName: file.name || "makbuz.pdf",
+      mimeType: file.type || "application/octet-stream",
+    });
+    revalidatePath(routes.admin.dues);
+    revalidatePath(routes.admin.duesDetail(dueId));
+    revalidatePath(routes.member.dues);
+    return { success: true, message: "Makbuz / fatura yüklendi." };
+  } catch (error) {
+    return { error: duesErrorMessage(error, "Makbuz yüklenemedi.") };
   }
 }

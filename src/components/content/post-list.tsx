@@ -8,6 +8,10 @@ import {
 import { PostTypeBadge } from "@/components/home/news-section";
 import { postHref } from "@/lib/content-paths";
 import { formatDate } from "@/lib/datetime";
+import {
+  looksLikeHtml,
+  sanitizeArticleHtmlForDisplay,
+} from "@/lib/html-sanitize";
 import { getMessages } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -193,6 +197,22 @@ export function RichTextContent({
   content: string;
   variant?: "default" | "article";
 }) {
+  if (looksLikeHtml(content)) {
+    const html = sanitizeArticleHtmlForDisplay(content);
+    if (!html) return null;
+    return (
+      <div
+        className={cn(
+          "rich-text-content text-[var(--color-text)]",
+          variant === "article"
+            ? "space-y-6 text-[17px] leading-[1.8] tracking-[-0.01em]"
+            : "space-y-5 text-[15px] leading-7 sm:text-base sm:leading-8",
+        )}
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+    );
+  }
+
   const paragraphs = content
     .split(/\n{2,}/)
     .map((part) => part.trim())
