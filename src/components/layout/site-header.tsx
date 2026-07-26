@@ -50,6 +50,7 @@ export function SiteHeader() {
     home: messages.nav.home,
     corporate: messages.nav.corporate,
     membership: messages.nav.membership,
+    memberList: messages.nav.memberList,
     legislation: messages.nav.legislation,
     events: messages.nav.events,
     news: messages.nav.news,

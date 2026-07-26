@@ -9,6 +9,7 @@ export const tr = {
     home: "Ana Sayfa",
     corporate: "Kurumsal",
     membership: "Üyelik İşlemleri",
+    memberList: "Üye Listesi",
     legislation: "Mevzuat",
     events: "Etkinlikler",
     news: "Haberler",

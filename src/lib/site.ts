@@ -119,6 +119,11 @@ export const publicNav = [
       { href: routes.membership.dues, label: "Aidat Sorgulama" },
     ],
   },
+  {
+    href: routes.florists,
+    labelKey: "memberList" as const,
+    children: null,
+  },
   { href: routes.legislation, labelKey: "legislation" as const, children: null },
   { href: routes.events.root, labelKey: "events" as const, children: null },
   { href: routes.news.root, labelKey: "news" as const, children: null },
