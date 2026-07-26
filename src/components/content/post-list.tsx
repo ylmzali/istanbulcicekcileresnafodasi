@@ -114,12 +114,14 @@ export function PostListGrid({ posts }: { posts: PublicPostCard[] }) {
 export function ContentFilterTabs({
   items,
   activeHref,
+  className,
 }: {
   items: Array<{ href: string; label: string }>;
   activeHref: string;
+  className?: string;
 }) {
   return (
-    <div className="mb-6 flex flex-wrap gap-2">
+    <div className={cn("mb-6 flex flex-wrap gap-2", className)}>
       {items.map((item) => {
         const active = item.href === activeHref;
         return (

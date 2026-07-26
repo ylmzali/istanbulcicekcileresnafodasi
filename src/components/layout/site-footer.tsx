@@ -11,8 +11,8 @@ export function SiteFooter() {
 
   return (
     <footer className="mt-auto bg-[var(--color-primary-900)] text-white print:hidden">
-      <div className="mx-auto grid max-w-[1280px] gap-10 px-4 py-12 sm:px-6 md:grid-cols-2 lg:grid-cols-4">
-        <div className="space-y-4">
+      <div className="mx-auto grid max-w-[1280px] grid-cols-1 gap-10 px-4 py-12 sm:grid-cols-2 sm:px-6 lg:grid-cols-12 lg:gap-6">
+        <div className="space-y-4 sm:col-span-2 lg:col-span-5">
           <div className="flex items-center gap-3">
             <Image
               src={siteConfig.logo.src}
@@ -21,14 +21,19 @@ export function SiteFooter() {
               height={48}
               className="h-12 w-12 rounded-full bg-white object-cover"
             />
-            <p className="text-sm font-semibold tracking-wide">
-              {messages.brand.name}
+            <p className="text-sm tracking-wide">
+              <span className="block font-semibold">
+                {messages.brand.nameLine1}
+              </span>
+              <span className="block font-bold">{messages.brand.nameLine2}</span>
             </p>
           </div>
-          <p className="text-sm leading-6 text-white/75">{messages.footer.about}</p>
+          <p className="max-w-md text-sm leading-6 text-white/75">
+            {messages.footer.about}
+          </p>
         </div>
 
-        <div>
+        <div className="lg:col-span-2">
           <p className="mb-3 text-sm font-semibold">
             {messages.footer.quickLinks}
           </p>
@@ -66,7 +71,7 @@ export function SiteFooter() {
           </ul>
         </div>
 
-        <div>
+        <div className="lg:col-span-2">
           <p className="mb-3 text-sm font-semibold">
             {messages.footer.memberServices}
           </p>
@@ -89,7 +94,7 @@ export function SiteFooter() {
           </ul>
         </div>
 
-        <div>
+        <div className="sm:col-span-2 lg:col-span-3">
           <p className="mb-3 text-sm font-semibold">{messages.footer.contact}</p>
           <ul className="space-y-2 text-sm text-white/80">
             <li>{siteConfig.address}</li>

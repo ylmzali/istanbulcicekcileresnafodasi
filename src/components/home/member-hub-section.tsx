@@ -113,14 +113,9 @@ export function MemberHubSection() {
                 submit: hub.submit,
                 showPassword: hub.showPassword,
                 hidePassword: hub.hidePassword,
+                becomeMember: hub.becomeMember,
               }}
             />
-
-            <div className="mt-3 flex justify-end text-xs text-white/80">
-              <Link href={routes.membership.apply} className="hover:text-white">
-                {hub.becomeMember}
-              </Link>
-            </div>
           </aside>
         </div>
       </div>

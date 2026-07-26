@@ -1,10 +1,7 @@
 "use client";
 
-import {
-  CloseIcon,
-  MenuIcon,
-  SearchIcon,
-} from "@/components/ui/icons";
+import { useSiteSearch } from "@/components/layout/site-search";
+import { CloseIcon, MenuIcon, SearchIcon } from "@/components/ui/icons";
 import { isExactPathActive, isNavItemActive } from "@/lib/nav";
 import { routes } from "@/lib/routes";
 import { publicNav } from "@/lib/site";
@@ -24,11 +21,16 @@ export function MobileNav({
   searchLabel,
 }: MobileNavProps) {
   const pathname = usePathname();
+  const { open: searchOpen, openSearch } = useSiteSearch();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    if (searchOpen) setOpen(false);
+  }, [searchOpen]);
 
   useEffect(() => {
     if (!open) return;
@@ -133,14 +135,17 @@ export function MobileNav({
               );
             })}
             <div className="flex gap-2 pt-3">
-              <Link
-                href={routes.search}
+              <button
+                type="button"
                 className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-[10px] border border-[var(--color-border)] text-sm"
-                onClick={() => setOpen(false)}
+                onClick={() => {
+                  setOpen(false);
+                  openSearch();
+                }}
               >
                 <SearchIcon className="h-4 w-4" />
                 {searchLabel}
-              </Link>
+              </button>
               <Link
                 href={routes.member.login}
                 className="inline-flex h-11 flex-1 items-center justify-center rounded-[10px] bg-[var(--color-primary-800)] text-sm font-medium text-white"

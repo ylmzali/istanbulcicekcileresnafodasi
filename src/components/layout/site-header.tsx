@@ -2,10 +2,10 @@
 
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { NavDropdown } from "@/components/layout/nav-dropdown";
+import { SiteSearchTrigger } from "@/components/layout/site-search";
 import {
   ClipboardIcon,
   InfoIcon,
-  SearchIcon,
   UserIcon,
 } from "@/components/ui/icons";
 import { getMessages } from "@/lib/i18n";
@@ -153,13 +153,10 @@ export function SiteHeader() {
             </ul>
 
             <div className="flex items-center gap-2">
-              <Link
-                href={routes.search}
+              <SiteSearchTrigger
+                label={messages.nav.search}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-[10px] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-soft)]"
-                aria-label={messages.nav.search}
-              >
-                <SearchIcon className="h-5 w-5" />
-              </Link>
+              />
               <Link
                 href={routes.member.login}
                 className="inline-flex h-10 items-center gap-2 rounded-[10px] bg-[var(--color-primary-800)] px-4 text-sm font-bold text-white transition hover:bg-[var(--color-primary-700)]"

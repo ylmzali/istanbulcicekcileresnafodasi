@@ -389,7 +389,7 @@ export const INPUT_FORMATS: Record<InputFormatId, InputFormatProfile> = {
     inputMode: "tel",
     autoComplete: "tel",
     spellCheck: false,
-    numericAlign: true,
+    numericAlign: false,
   },
   email: {
     id: "email",

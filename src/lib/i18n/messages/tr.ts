@@ -69,14 +69,24 @@ export const tr = {
   },
   search: {
     title: "Site İçi Arama",
-    description: "Haber, duyuru ve sık sorulan sorularda arayın.",
+    description:
+      "Haber, duyuru, etkinlik, mevzuat ve sık sorulan sorularda arayın.",
     inputLabel: "Arama",
-    placeholder: "En az 2 karakter yazın…",
+    placeholder: "Ne arıyorsunuz?",
     submit: "Ara",
-    hint: "Aramak istediğiniz kelimeyi yazıp Ara’ya basın.",
+    openLabel: "Site içinde ara",
+    close: "Aramayı kapat",
+    dialogHint: "Haber, duyuru, etkinlik, mevzuat ve SSS",
+    hint: "En az 2 karakter yazın. Önerilerden de başlayabilirsiniz.",
+    suggestions: ["aidat", "üyelik", "belge", "etkinlik"],
     minChars: "En az 2 karakter girin.",
     empty: "“{q}” için sonuç bulunamadı.",
     results: "{count} sonuç · “{q}”",
+    resultsLabel: "Arama sonuçları",
+    loading: "Aranıyor…",
+    error: "Arama şu an yapılamıyor. Lütfen tekrar deneyin.",
+    footerNav: "↑↓ gezin · Enter aç",
+    footerEsc: "Esc kapat",
   },
   announcement: {
     label: "Önemli Duyuru",
@@ -130,6 +140,37 @@ export const tr = {
     role: "İstanbul Çiçekçiler Esnaf Odası Başkanı",
     cta: "Mesajın Tamamını Oku",
   },
+  directory: {
+    title: "Kayıtlı Çiçekçi Rehberi",
+    description:
+      "İstanbul’un 39 ilçesindeki kayıtlı çiçekçileri ilçe ve işletme adına göre bulun.",
+    eyebrow: "Doğrulanmış üye işletmeler",
+    district: "İlçe seçin",
+    search: "İşletme adıyla arayın",
+    submit: "Çiçekçi bul",
+    empty:
+      "Aramanıza uygun kayıt bulunamadı. Yalnızca aktif ve yayına izin vermiş üyeler listelenir.",
+    cta: "Tüm rehberi görüntüle",
+    fullscreenEnter: "Haritayı tam ekran aç",
+    fullscreenExit: "Tam ekrandan çık",
+    trustNote:
+      "Yalnızca odaya kayıtlı, aktif ve yayına izin vermiş İstanbul işletmeleri listelenir.",
+    resultsCount: "{count} işletme",
+    loading: "Rehber yükleniyor…",
+    loadError: "Rehber yüklenemedi. Lütfen tekrar deneyin.",
+    verifiedBadge: "Doğrulanmış",
+    website: "Web sitesi",
+    legalName: "Unvan",
+    address: "Adres",
+    phone: "Telefon",
+    email: "E-posta",
+    panelTitle: "{district} kayıtlı çiçekçiler",
+    panelHint: "Haritadan ilçe seçerek listeyi görüntüleyin.",
+    panelEmpty: "Bu ilçede yayında kayıtlı işletme bulunmuyor.",
+    panelClose: "Listeyi kapat",
+    panelViewAll: "Rehberde aç",
+    openOnMap: "Haritada aç",
+  },
   memberHub: {
     title: "Online Üye İşlem Merkezi",
     description:
@@ -149,15 +190,18 @@ export const tr = {
     cards: {
       membershipApplication: {
         title: "Oda Kayıt Başvurusu",
-        description: "Ön başvurunuzu başlatın; belgeleri sonra yükleyin.",
+        description:
+          "Ön başvurunuzu online başlatın. Belgelerinizi takip numaranız ile daha sonra adım adım yükleyebilirsiniz.",
       },
       dues: {
         title: "Aidat Sorgulama",
-        description: "Ödeme yöntemleri ve aidat bilgilendirmesi.",
+        description:
+          "Banka ve tahsilat bilgilerini inceleyin. Üye girişi ile aidat defterinizi ve açık borçlarınızı görüntüleyin.",
       },
       information: {
         title: "Bilgi Edinme",
-        description: "Bilgi talebinizi iletin ve takip edin.",
+        description:
+          "Oda işlemleri hakkında bilgi talebinizi iletin. Takip numaranız ile sürecinizi online izleyebilirsiniz.",
       },
     },
   },
@@ -208,6 +252,18 @@ export const tr = {
     listTitle: "Etkinlikler",
     listDescription:
       "Odanın düzenlediği eğitim, seminer ve mesleki etkinlikleri takip edin.",
+    eyebrow: "Eğitim ve etkinlik takvimi",
+    sectionList: "Takvim",
+    resultsCount: "{count} etkinlik",
+    viewDetails: "Detay",
+    asideTitle: "Katılım ve bilgilendirme",
+    asideBody:
+      "Etkinlik kayıt koşulları ve kontenjan bilgisi detay sayfasında yer alır. Üyelik işlemlerinizi online sürdürebilirsiniz.",
+    asideApply: "Üyelik başvurusu",
+    asideContactTitle: "İletişim",
+    tip1: "Yaklaşan etkinlikleri filtreleyerek sıradaki programı görebilirsiniz.",
+    tip2: "Detay sayfasından takvime (.ics) ekleyebilirsiniz.",
+    tip3: "Kontenjanlı etkinliklerde mükerrer kayıt engellenir.",
     online: "Çevrimiçi",
     location: "Konum",
     type: "Tür",
@@ -222,7 +278,7 @@ export const tr = {
       upcoming: "Yaklaşan",
       past: "Geçmiş",
     },
-    nextEvent: "Sıradaki etkinlik",
+    nextEvent: "Öne çıkan etkinlik",
     pastBadge: "Tamamlandı",
     upcomingBadge: "Yakında",
     addToCalendar: "Takvime ekle",

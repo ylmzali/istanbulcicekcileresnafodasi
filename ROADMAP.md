@@ -13,7 +13,7 @@ Son güncelleme: 2026-07-25
 | Alan                                                   | Durum                     |
 | ------------------------------------------------------ | ------------------------- |
 | Haber, duyuru, etkinlik, SSS, hero, mevzuat            | Çalışıyor (CMS)           |
-| Çiçekçi rehberi                                        | Kapsam dışı (kaldırıldı)  |
+| Çiçekçi rehberi                                        | ✅ Ana sayfa haritası + `/kayitli-cicekciler` |
 | Yönetim: içerik, üyeler, aidat tahakkuk/tahsilat/muafiyet | Çalışıyor              |
 | Yönetici girişi                                        | Çalışıyor (`super_admin` + izin iskeleti) |
 | Üye girişi / üye paneli                                | ✅ Faz 1 tamamlandı       |
@@ -288,7 +288,7 @@ Legend: ✅ hazır · 🟡 kısmi · ❌ yok
 Kapsam dışı (kaldırıldı):
 
 - Public evrak doğrulama (`/evrak-dogrulama`)
-- Kayıtlı çiçekçi rehberi / harita
+- ~~Kayıtlı çiçekçi rehberi / harita~~ (geri alındı: ana sayfa + `/kayitli-cicekciler`)
 - Belge talepleri (üye + admin)
 - Online randevu (üye + admin)
 

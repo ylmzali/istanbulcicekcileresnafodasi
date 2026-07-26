@@ -1,4 +1,5 @@
 import { AboutSection } from "@/components/home/about-section";
+import { DirectorySection } from "@/components/home/directory-section";
 import { EventsResourcesSection } from "@/components/home/events-resources-section";
 import { FaqSupportSection } from "@/components/home/faq-support-section";
 import { HeroSection } from "@/components/home/hero-section";
@@ -20,7 +21,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Ana Sayfa",
   description:
-    "İstanbul Çiçekçiler Esnaf Odası resmi web sitesi. Üyelik işlemleri, duyurular ve eğitimler.",
+    "İstanbul Çiçekçiler Esnaf Odası resmi web sitesi. Üyelik işlemleri, duyurular, eğitimler ve kayıtlı çiçekçi rehberi.",
 };
 
 export default async function HomePage() {
@@ -51,6 +52,7 @@ export default async function HomePage() {
       />
       <PresidentMessageSection />
       <MemberHubSection />
+      <DirectorySection />
       <NewsSection items={newsItems} />
       <EventsResourcesSection events={upcomingEvents} resources={resources} />
       <StatsSection activeMemberCount={activeMemberCount} />

@@ -53,9 +53,11 @@ export function SupportMessageForm({ requestId }: { requestId: string }) {
         success={state.success}
         successMessage={state.message}
       />
-      <Button type="submit" disabled={pending}>
-        {pending ? "Kaydediliyor…" : "Kaydet"}
-      </Button>
+      <div className="flex justify-end">
+        <Button type="submit" disabled={pending}>
+          {pending ? "Kaydediliyor…" : "Kaydet"}
+        </Button>
+      </div>
     </form>
   );
 }

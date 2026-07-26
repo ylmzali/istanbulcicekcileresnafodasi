@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import {
   ContentFilterTabs,
   ContentPageHeader,
@@ -8,8 +9,10 @@ import {
   EventFeaturedCard,
   EventList,
 } from "@/components/content/event-list";
+import { MailIcon, PhoneIcon } from "@/components/ui/icons";
 import { getMessages } from "@/lib/i18n";
 import { routes } from "@/lib/routes";
+import { siteConfig } from "@/lib/site";
 import {
   getFeaturedPublicEvent,
   listPublishedEvents,
@@ -45,6 +48,7 @@ function scopeHref(scope: EventScope, page = 1) {
 export default async function EventsPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const messages = getMessages();
+  const e = messages.events;
   const scope = parseScope(params.kapsam);
   const page = Math.max(1, Number(params.page) || 1);
 
@@ -60,51 +64,143 @@ export default async function EventsPage({ searchParams }: PageProps) {
 
   const emptyMessage =
     scope === "upcoming"
-      ? messages.events.emptyUpcoming
+      ? e.emptyUpcoming
       : scope === "past"
-        ? messages.events.emptyPast
-        : messages.events.empty;
+        ? e.emptyPast
+        : e.empty;
 
   const filters = [
-    { href: scopeHref("all"), label: messages.events.tabs.all },
-    { href: scopeHref("upcoming"), label: messages.events.tabs.upcoming },
-    { href: scopeHref("past"), label: messages.events.tabs.past },
+    { href: scopeHref("all"), label: e.tabs.all },
+    { href: scopeHref("upcoming"), label: e.tabs.upcoming },
+    { href: scopeHref("past"), label: e.tabs.past },
   ];
 
+  const listedCount =
+    result.total + (featured && page === 1 && scope !== "past" ? 1 : 0);
+
   return (
-    <div className="relative bg-[var(--color-surface-soft)]">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-[radial-gradient(90%_60%_at_10%_0%,color-mix(in_srgb,var(--color-primary-100)_80%,transparent),transparent_70%)]"
-      />
-
-      <div className="relative mx-auto w-full max-w-[1280px] px-4 py-8 sm:px-6 sm:py-12">
+    <div className="bg-[var(--color-surface-soft)]">
+      <div className="mx-auto w-full max-w-[1280px] px-4 py-10 sm:px-6 sm:py-14">
         <ContentPageHeader
-          title={messages.events.listTitle}
-          description={messages.events.listDescription}
-          breadcrumbs={[{ label: messages.events.listTitle }]}
+          title={e.listTitle}
+          description={e.listDescription}
+          breadcrumbs={[
+            { label: messages.nav.home, href: routes.home },
+            { label: e.listTitle },
+          ]}
         />
 
-        <ContentFilterTabs items={filters} activeHref={scopeHref(scope)} />
+        <p className="-mt-4 mb-8 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-primary-700)]">
+          {e.eyebrow}
+        </p>
 
-        {featured ? (
-          <div className="mb-8">
-            <EventFeaturedCard event={featured} />
+        <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_280px] xl:items-start xl:gap-10">
+          <div className="min-w-0 space-y-6">
+            <div className="rounded-[16px] border border-[var(--color-border)] bg-white px-4 py-4 sm:px-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <ContentFilterTabs
+                  items={filters}
+                  activeHref={scopeHref(scope)}
+                  className="mb-0"
+                />
+                <p className="shrink-0 text-xs text-[var(--color-text-muted)]">
+                  {e.resultsCount.replace("{count}", String(listedCount))}
+                </p>
+              </div>
+            </div>
+
+            {featured ? (
+              <section aria-labelledby="featured-event-heading">
+                <h2 id="featured-event-heading" className="sr-only">
+                  {e.nextEvent}
+                </h2>
+                <EventFeaturedCard event={featured} />
+              </section>
+            ) : null}
+
+            <section aria-labelledby="events-list-heading" className="space-y-3">
+              <div className="flex items-end justify-between gap-3">
+                <h2
+                  id="events-list-heading"
+                  className="text-base font-semibold text-[var(--color-primary-900)]"
+                >
+                  {e.sectionList}
+                </h2>
+              </div>
+
+              <EventList
+                events={result.rows}
+                emptyMessage={emptyMessage}
+                featuredId={featured?.id}
+                variant="agenda"
+              />
+            </section>
+
+            <Pagination
+              page={result.page}
+              pageSize={result.pageSize}
+              total={result.total}
+              makeHref={(nextPage) => scopeHref(scope, nextPage)}
+            />
           </div>
-        ) : null}
 
-        <EventList
-          events={result.rows}
-          emptyMessage={emptyMessage}
-          featuredId={featured?.id}
-        />
+          <aside className="space-y-4 xl:sticky xl:top-24">
+            <div className="rounded-[16px] border border-[var(--color-border)] bg-white p-5">
+              <h2 className="text-sm font-semibold text-[var(--color-text)]">
+                {e.asideTitle}
+              </h2>
+              <p className="mt-2 text-[13px] leading-5 text-[var(--color-text-muted)]">
+                {e.asideBody}
+              </p>
+              <div className="mt-4 flex flex-col gap-2">
+                <Link
+                  href={routes.membership.apply}
+                  className="inline-flex h-10 items-center justify-center rounded-[10px] bg-[var(--color-primary-800)] px-4 text-sm font-bold text-white transition hover:bg-[var(--color-primary-700)]"
+                >
+                  {e.asideApply}
+                </Link>
+                <Link
+                  href={routes.member.login}
+                  className="inline-flex h-10 items-center justify-center rounded-[10px] border border-[var(--color-border)] px-4 text-sm font-semibold text-[var(--color-primary-800)] transition hover:bg-[var(--color-primary-100)]/40"
+                >
+                  {messages.nav.memberLogin}
+                </Link>
+              </div>
+            </div>
 
-        <Pagination
-          page={result.page}
-          pageSize={result.pageSize}
-          total={result.total}
-          makeHref={(nextPage) => scopeHref(scope, nextPage)}
-        />
+            <div className="rounded-[16px] border border-[var(--color-border)] bg-white p-5">
+              <h2 className="text-sm font-semibold text-[var(--color-text)]">
+                {e.asideContactTitle}
+              </h2>
+              <ul className="mt-3 space-y-2 text-sm">
+                <li>
+                  <a
+                    href={siteConfig.phoneHref}
+                    className="inline-flex items-center gap-1.5 font-medium text-[var(--color-primary-800)] hover:underline"
+                  >
+                    <PhoneIcon className="h-4 w-4" />
+                    {siteConfig.phoneDisplay}
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href={`mailto:${siteConfig.email}`}
+                    className="inline-flex items-center gap-1.5 font-medium text-[var(--color-primary-800)] hover:underline"
+                  >
+                    <MailIcon className="h-4 w-4" />
+                    {siteConfig.email}
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <ul className="space-y-2 rounded-[16px] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-5 text-[13px] leading-5 text-[var(--color-text-muted)]">
+              <li>{e.tip1}</li>
+              <li>{e.tip2}</li>
+              <li>{e.tip3}</li>
+            </ul>
+          </aside>
+        </div>
       </div>
     </div>
   );

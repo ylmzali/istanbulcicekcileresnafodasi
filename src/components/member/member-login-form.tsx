@@ -29,6 +29,7 @@ type MemberLoginFormProps = {
     submit: string;
     showPassword: string;
     hidePassword: string;
+    becomeMember?: string;
   };
   variant?: "page" | "hub";
 };
@@ -96,14 +97,6 @@ export function MemberLoginForm({
               {showPassword ? labels.hidePassword : labels.showPassword}
             </button>
           </div>
-          <Checkbox
-            id="member-hub-remember-me"
-            name="rememberMe"
-            value="true"
-            label={labels.rememberMe}
-            tone="onDark"
-            className="min-h-11 text-xs"
-          />
         </>
       ) : (
         <>
@@ -156,13 +149,23 @@ export function MemberLoginForm({
       ) : null}
 
       {isHub ? (
-        <button
-          type="submit"
-          disabled={pending}
-          className="mt-1 inline-flex h-11 w-full items-center justify-center rounded-[10px] bg-white text-sm font-bold text-[var(--color-primary-900)] transition hover:bg-[var(--color-primary-100)] disabled:opacity-60"
-        >
-          {labels.submit}
-        </button>
+        <div className="flex items-center justify-between gap-3">
+          <Checkbox
+            id="member-hub-remember-me"
+            name="rememberMe"
+            value="true"
+            label={labels.rememberMe}
+            tone="onDark"
+            className="min-h-11 text-xs"
+          />
+          <button
+            type="submit"
+            disabled={pending}
+            className="inline-flex h-10 shrink-0 items-center justify-center rounded-[10px] bg-white px-4 text-sm font-bold text-[var(--color-primary-900)] transition hover:bg-[var(--color-primary-100)] disabled:opacity-60"
+          >
+            {labels.submit}
+          </button>
+        </div>
       ) : (
         <Button type="submit" className="w-full" disabled={pending}>
           {labels.submit}
@@ -182,6 +185,14 @@ export function MemberLoginForm({
         >
           {labels.forgotPassword}
         </Link>
+        {isHub && labels.becomeMember ? (
+          <Link
+            href={routes.membership.apply}
+            className="hover:text-white"
+          >
+            {labels.becomeMember}
+          </Link>
+        ) : null}
       </div>
     </form>
   );

@@ -117,11 +117,24 @@ export async function listContactSubmissions(filters?: {
   page?: number;
   pageSize?: number;
   status?: string;
+  q?: string;
 }) {
   const page = Math.max(1, filters?.page ?? 1);
   const pageSize = Math.min(50, Math.max(1, filters?.pageSize ?? 20));
+  const q = filters?.q?.trim();
   const where = {
     ...(filters?.status ? { status: filters.status } : {}),
+    ...(q
+      ? {
+          OR: [
+            { name: { contains: q } },
+            { email: { contains: q } },
+            { subject: { contains: q } },
+            { phone: { contains: q } },
+            { message: { contains: q } },
+          ],
+        }
+      : {}),
   };
 
   const [total, rows] = await Promise.all([

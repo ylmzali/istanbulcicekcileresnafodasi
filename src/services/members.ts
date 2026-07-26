@@ -765,12 +765,14 @@ export async function updateMember(
         taxNoEnc: taxNo ? encryptField(taxNo) : existingTaxEnc,
         phone: input.businessPhone?.trim()
           ? normalizePhoneTr(input.businessPhone)
-          : null,
+          : input.phone?.trim()
+            ? normalizePhoneTr(input.phone)
+            : null,
         email: input.businessEmail?.trim() || null,
         website: input.website?.trim() || null,
         countryCode: location.countryCode,
         districtId: location.districtId,
-        address: input.address?.trim() || null,
+        address: input.address?.trim() || input.addressLine1?.trim() || null,
         directoryVisible: input.directoryVisible,
         verificationStatus: input.verificationStatus,
       };

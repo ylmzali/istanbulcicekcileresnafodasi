@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
-import { AdminPageHeader, StatusBadge } from "@/components/admin/form-fields";
+import { ContactSubmissionsDataTable } from "@/components/admin/contact-submissions-data-table";
+import { AdminPageHeader } from "@/components/admin/form-fields";
+import { getSearchParam, parseAdminTableQuery } from "@/lib/admin-table";
 import { formatDateTime } from "@/lib/datetime";
+import { INPUT_FORMATS } from "@/lib/input-formats";
 import { getMessages } from "@/lib/i18n";
 import { listContactSubmissions } from "@/services/contact";
 
@@ -11,54 +14,84 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function ContactSubmissionsPage() {
+type PageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+const STATUS_OPTIONS = [
+  { value: "new", label: "Yeni" },
+  { value: "read", label: "Okundu" },
+] as const;
+
+function statusLabel(status: string) {
+  if (status === "new") return "Yeni";
+  if (status === "read") return "Okundu";
+  return status;
+}
+
+export default async function ContactSubmissionsPage({
+  searchParams,
+}: PageProps) {
   const a = getMessages().admin;
-  const result = await listContactSubmissions({ pageSize: 50 });
+  const params = await searchParams;
+  const query = parseAdminTableQuery(params);
+  const q = getSearchParam(params, "q") ?? "";
+  const statusRaw = getSearchParam(params, "status") ?? "";
+  const status = STATUS_OPTIONS.some((item) => item.value === statusRaw)
+    ? statusRaw
+    : undefined;
+
+  const result = await listContactSubmissions({
+    page: query.page,
+    pageSize: query.pageSize,
+    status,
+    q: q || undefined,
+  });
 
   return (
-    <div className="space-y-4">
+    <div>
       <AdminPageHeader
         title={a.contactSubmissions}
-        description={`Site iletişim formundan gelen mesajlar. Toplam ${result.total} kayıt.`}
+        description="Site iletişim formundan gelen mesajlar."
       />
 
-      {result.rows.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-10 text-center text-sm text-[var(--color-text-muted)]">
-          {a.empty}
-        </p>
-      ) : (
-        <ul className="space-y-3">
-          {result.rows.map((row) => (
-            <li
-              key={row.id}
-              className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div>
-                  <p className="font-semibold text-[var(--color-text)]">
-                    {row.subject || "Konusuz"}
-                  </p>
-                  <p className="mt-0.5 text-sm text-[var(--color-text-muted)]">
-                    {row.name} · {row.email}
-                    {row.phone ? ` · ${row.phone}` : ""}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <StatusBadge
-                    label={row.status === "new" ? "Yeni" : row.status}
-                  />
-                  <span className="text-xs text-[var(--color-text-muted)]">
-                    {formatDateTime(row.createdAt)}
-                  </span>
-                </div>
-              </div>
-              <p className="mt-3 whitespace-pre-line text-sm leading-6 text-[var(--color-text)]">
-                {row.message}
-              </p>
-            </li>
-          ))}
-        </ul>
-      )}
+      <ContactSubmissionsDataTable
+        rows={result.rows.map((row) => ({
+          id: row.id,
+          subject: row.subject || "Konusuz",
+          name: row.name,
+          email: row.email,
+          phone: row.phone
+            ? INPUT_FORMATS.phoneTr.format(row.phone)
+            : "—",
+          messagePreview: row.message,
+          statusLabel: statusLabel(row.status),
+          createdLabel: formatDateTime(row.createdAt),
+        }))}
+        total={result.total}
+        page={result.page}
+        pageSize={result.pageSize}
+        query={{ q, status: status ?? "" }}
+        labels={{
+          search: a.search,
+          all: a.filterAll,
+          empty: a.empty,
+          results: a.resultsCount,
+          prev: a.prevPage,
+          next: a.nextPage,
+          apply: a.applyFilters,
+          subject: "Konu",
+          applicant: "Gönderen",
+          phone: "Telefon",
+          message: "Mesaj",
+          status: a.status,
+          createdAt: "Tarih",
+        }}
+        statusOptions={STATUS_OPTIONS.map((item) => ({
+          value: item.value,
+          label: item.label,
+        }))}
+      />
     </div>
   );
 }
