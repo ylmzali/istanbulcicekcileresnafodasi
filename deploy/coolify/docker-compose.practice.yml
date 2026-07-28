@@ -1,0 +1,71 @@
+# Local practice stack (Colima/Docker) mirroring Coolify MySQL + app.
+# Not a substitute for Coolify on a real VPS — smoke-test only.
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: practice_root
+      MYSQL_DATABASE: istanbul_cicekciler_odasi
+      MYSQL_USER: iceo
+      MYSQL_PASSWORD: practice_iceo
+    ports:
+      - "3307:3306"
+    volumes:
+      - iceo_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-ppractice_root"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  migrate:
+    image: node:20-bookworm-slim
+    working_dir: /app
+    volumes:
+      - ../..:/app
+    environment:
+      DATABASE_URL: mysql://iceo:practice_iceo@mysql:3306/istanbul_cicekciler_odasi
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command: >
+      bash -lc "apt-get update -qq && apt-get install -y -qq openssl >/dev/null
+      && npm ci
+      && npx prisma generate
+      && npx prisma migrate deploy"
+
+  app:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: 0.0.0.0
+      DATABASE_URL: mysql://iceo:practice_iceo@mysql:3306/istanbul_cicekciler_odasi
+      AUTH_SECRET: practice_auth_secret_change_me_32chars_min
+      AUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_PUBLIC_SITE_NAME: İstanbul Çiçekçiler Esnaf Odası
+      PAYMENT_PROVIDER: mock
+    volumes:
+      - iceo_uploads:/app/public/uploads
+      - iceo_storage_resources:/app/storage/resources
+      - iceo_storage_applications:/app/storage/applications
+      - iceo_storage_receipts:/app/storage/receipts
+    depends_on:
+      mysql:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  iceo_mysql_data:
+  iceo_uploads:
+  iceo_storage_resources:
+  iceo_storage_applications:
+  iceo_storage_receipts:

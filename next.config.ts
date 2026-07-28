@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Coolify / Docker: lean runtime image via `.next/standalone`
+  output: "standalone",
   experimental: {
     // Receipt / document uploads via Server Actions (PDF/görsel, max ~10 MB + multipart overhead).
     serverActions: {

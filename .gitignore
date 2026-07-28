@@ -35,6 +35,13 @@ yarn-error.log*
 .env.*
 .env.local
 .env.*.local
+!.env.example
+!.env.production.example
+
+# Coolify local practice secrets (never commit)
+/deploy/coolify/practice-database.env
+/deploy/coolify/*.local.env
+
 
 # vercel
 .vercel

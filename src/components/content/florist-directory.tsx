@@ -88,6 +88,21 @@ export function FloristDirectory({
 
   return (
     <div className="space-y-6">
+      <div className="overflow-hidden rounded-[18px] border border-[var(--color-border)] bg-white">
+        <div className="relative min-h-[320px] lg:min-h-[420px]">
+          <IstanbulMap
+            districtSlug={district}
+            markers={markers}
+            className="absolute inset-0 h-full w-full"
+            title={t.title}
+            onDistrictSelect={(selected) => {
+              setDistrict(selected.slug);
+              void runSearch(q, selected.slug);
+            }}
+          />
+        </div>
+      </div>
+
       <form
         className="rounded-[16px] border border-[var(--color-border)] bg-white p-4 sm:p-5"
         onSubmit={(event) => {
@@ -144,17 +159,6 @@ export function FloristDirectory({
           {t.trustNote}
         </p>
       </form>
-
-      <div className="overflow-hidden rounded-[18px] border border-[var(--color-border)] bg-white">
-        <div className="relative min-h-[320px] lg:min-h-[420px]">
-          <IstanbulMap
-            districtSlug={district}
-            markers={markers}
-            className="absolute inset-0 h-full w-full"
-            title={t.title}
-          />
-        </div>
-      </div>
 
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-[var(--color-text-muted)]">

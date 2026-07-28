@@ -32,6 +32,15 @@ function hashToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
 }
 
+/** Prefer explicit COOKIE_SECURE; else follow public URL scheme (not NODE_ENV alone). */
+function isSecureCookie() {
+  if (process.env.COOKIE_SECURE === "true") return true;
+  if (process.env.COOKIE_SECURE === "false") return false;
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL ?? process.env.AUTH_URL ?? "";
+  return appUrl.startsWith("https://");
+}
+
 function sessionExpiryDate(ttlDays = SESSION_TTL_DAYS) {
   const expires = new Date();
   expires.setDate(expires.getDate() + ttlDays);
@@ -90,7 +99,8 @@ export async function createSession(
   const cookieStore = await cookies();
   cookieStore.set(cookieName, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    // Secure only when the public URL is HTTPS (HTTP IP deploys otherwise drop the cookie).
+    secure: isSecureCookie(),
     sameSite: "lax",
     path: "/",
     expires: expiresAt,
