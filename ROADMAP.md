@@ -2,8 +2,8 @@
 
 Bu dosya, mevcut kod tabanı taramasına göre ürün kurallarıyla (`AGENTS.md` / `.cursor/rules`) hizalı geliştirme yol haritasını tanımlar.
 
-Son güncelleme: 2026-07-25  
-**Aktif faz:** Faz 4 devam — Aidat ters kayıt (makbuz: admin yükleme)
+Son güncelleme: 2026-07-26  
+**Aktif faz:** Faz 4 devam — Aidat (dönem bazlı tam tahsil; online ödeme sonra)
 
 ---
 
@@ -37,7 +37,7 @@ Son güncelleme: 2026-07-25
 
 ### Ana boşluklar
 
-- Aidat ters kayıt / online ödeme (makbuz: admin yükleme)
+- Online ödeme (makbuz: admin yükleme ✅; dönem bazlı tam tahsil ✅)
 - Kritik mutasyon audit’i ve yönetici 2FA eksik
 - Test suite yok
 
@@ -53,7 +53,7 @@ Faz 1  Üye auth + yetki iskeleti          ✅ tamamlandı
     → Faz 0  Kamu güveni (iletişim, yasal, chrome)  ✅ tamamlandı
       → Faz 2  Üyelik başvurusu  ✅ tamamlandı
         → Faz 6  Destek / bilgi edinme / dilek-şikâyet  ✅ tamamlandı
-          → Faz 4 kalan (ters kayıt; makbuz admin yükleme ✅)  ← ŞİMDİ
+          → Faz 4 kalan (dönem bazlı tahsil ✅; online ödeme)  ← ŞİMDİ
             → Faz 8  Operasyon, güvenlik, test
 ```
 
@@ -153,7 +153,7 @@ Faz 1  Üye auth + yetki iskeleti          ✅ tamamlandı
 ## Faz 4 — Aidatı tamamla
 
 **Amaç:** Admin tahsilatını üye görünürlüğü ve (ileride) online ödeme ile birleştirmek.  
-**Durum:** Üye defteri + admin makbuz/fatura yükleme tamam; ters kayıt / online ödeme bekliyor
+**Durum:** Üye defteri + makbuz yükleme + dönem bazlı tam tahsil tamam; online ödeme bekliyor
 
 ### Hazır olanlar (admin)
 
@@ -174,7 +174,8 @@ Faz 1  Üye auth + yetki iskeleti          ✅ tamamlandı
 ### Sonraki alt adımlar
 
 - [x] Makbuz / fatura: admin yükler, üye indirir (sistem PDF üretmez)
-- [ ] Ters kayıt / düzeltme hareketi (silme yok)
+- [x] Dönem bazlı tam tahsil (“Tahsil edildi”); parça ödeme yok; biriken dönemler tek tek kapatılır
+- [ ] ~~Ters kayıt / düzeltme hareketi~~ (kapsam dışı — dönem bazlı tam tahsil yeterli)
 - [ ] Vade/gecikme kurallarının netleştirilmesi
 - [ ] Online ödeme adapter + webhook + idempotency → `feature_flags` arkasında
 - [ ] Kart bilgisi uygulama sunucusunda tutulmaz
@@ -300,7 +301,7 @@ Bunlar `feature_flags` + adapter arkasında beklemelidir (kapsam dışı olanlar
 
 ## Sonraki adım (güncel)
 
-1. **Faz 4 devam** — Ters kayıt; (sonra) online ödeme ← sıradaki
+1. **Faz 4 devam** — Vade/gecikme netleştirme; (sonra) online ödeme ← sıradaki
 2. **Faz 8** — Audit genişletme, 2FA, test suite
 3. Online ödeme — yalnızca gerçek PSP + webhook + feature flag ile
 

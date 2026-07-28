@@ -194,7 +194,6 @@ export async function collectDuePaymentAction(
   const session = await assertDuesCollect();
 
   const input: CollectPaymentInput = {
-    amount: str(formData, "amount"),
     method: str(formData, "method") as CollectPaymentInput["method"],
     providerReference: nullable(formData, "providerReference"),
     note: nullable(formData, "note"),
@@ -205,7 +204,7 @@ export async function collectDuePaymentAction(
     await collectMemberDuePayment(dueId, input, session.id);
     revalidatePath(routes.admin.dues);
     revalidatePath(routes.admin.duesDetail(dueId));
-    return { success: true, message: "Tahsilat kaydedildi." };
+    return { success: true, message: "Dönem tahsil edildi olarak işaretlendi." };
   } catch (error) {
     return { error: duesErrorMessage(error, "Tahsilat kaydedilemedi.") };
   }

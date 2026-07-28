@@ -71,7 +71,14 @@ export const memberCreateSchema = z.object({
   firstName: z.string().trim().min(1, "Ad zorunludur.").max(120),
   lastName: z.string().trim().min(1, "Soyad zorunludur.").max(120),
   identityNo: requiredIdentityNo,
-  email: z.string().trim().email().max(190).optional().or(z.literal("")),
+  email: z
+    .string()
+    .trim()
+    .max(190)
+    .refine(
+      (value) => !value || z.string().email().safeParse(value).success,
+      "Geçerli bir e-posta adresi girin.",
+    ),
   phone: z
     .string()
     .trim()
@@ -89,14 +96,18 @@ export const memberCreateSchema = z.object({
   directoryConsent: z.boolean().default(false),
   collectionRef: z.string().trim().max(80).optional().nullable(),
   registrationDate: z.string().optional().nullable(),
-  countryCode: z.string().trim().length(2).default("TR"),
+  countryCode: z
+    .string()
+    .trim()
+    .length(2, "Ülke kodu 2 karakter olmalıdır.")
+    .default("TR"),
   cityId: z.string().trim().optional().nullable(),
   districtId: z.string().trim().min(1, "İlçe seçimi zorunludur."),
   addressLine1: z
     .string()
     .trim()
     .min(1, "Adres zorunludur.")
-    .max(255),
+    .max(255, "Adres en fazla 255 karakter olabilir."),
   addressLine2: z.string().trim().max(255).optional().nullable(),
   postalCode: z
     .string()
@@ -111,13 +122,13 @@ export const memberCreateSchema = z.object({
     .string()
     .trim()
     .min(1, "Ünvan / işletme adı zorunludur.")
-    .max(255),
+    .max(255, "Ünvan / işletme adı en fazla 255 karakter olabilir."),
   tradeName: z.string().trim().max(255).optional().nullable(),
   taxOffice: z
     .string()
     .trim()
     .min(1, "Vergi dairesi zorunludur.")
-    .max(120),
+    .max(120, "Vergi dairesi en fazla 120 karakter olabilir."),
   taxNo: requiredTaxNo,
   address: z.string().trim().max(500).optional().nullable(),
   businessPhone: z
@@ -163,7 +174,14 @@ export const memberUpdateSchema = z.object({
   countryCode: z.string().trim().length(2).default("TR"),
   cityId: z.string().trim().optional().nullable(),
   districtId: z.string().trim().min(1, "İlçe seçimi zorunludur."),
-  email: z.string().trim().email().max(190).optional().or(z.literal("")),
+  email: z
+    .string()
+    .trim()
+    .max(190)
+    .refine(
+      (value) => !value || z.string().email().safeParse(value).success,
+      "Geçerli bir e-posta adresi girin.",
+    ),
   phone: z
     .string()
     .trim()
@@ -172,7 +190,13 @@ export const memberUpdateSchema = z.object({
       (value) => isValidPhoneTr(value),
       "Geçerli bir telefon numarası girin (05xx… veya alan kodlu hat).",
     ),
-  newPassword: z.string().min(8).max(200).optional().or(z.literal("")),
+  newPassword: z
+    .string()
+    .max(200)
+    .refine(
+      (value) => !value || value.length >= 8,
+      "Şifre en az 8 karakter olmalıdır.",
+    ),
   businessId: z.string().trim().optional().nullable(),
   legalName: z
     .string()
@@ -552,6 +576,18 @@ export async function createMember(
     ? normalizeIdentityNo(input.identityNo)
     : "";
   const taxNo = input.taxNo?.trim() ? normalizeTaxNo(input.taxNo) : "";
+
+  if (identityNo) {
+    const identityHash = hashIdentityForLookup(identityNo);
+    const existingIdentity = await prisma.member.findFirst({
+      where: { identityNoHash: identityHash, deletedAt: null },
+      select: { id: true },
+    });
+    if (existingIdentity) {
+      throw new Error("IDENTITY_TAKEN");
+    }
+  }
+
   const passwordHash = await hashPassword(input.password);
   const registrationDate =
     parseOptionalDate(input.registrationDate) ?? new Date();
@@ -680,6 +716,21 @@ export async function updateMember(
     ? normalizeIdentityNo(input.identityNo)
     : "";
   const taxNo = input.taxNo?.trim() ? normalizeTaxNo(input.taxNo) : "";
+
+  if (identityNo) {
+    const identityHash = hashIdentityForLookup(identityNo);
+    const existingIdentity = await prisma.member.findFirst({
+      where: {
+        identityNoHash: identityHash,
+        deletedAt: null,
+        NOT: { id },
+      },
+      select: { id: true },
+    });
+    if (existingIdentity) {
+      throw new Error("IDENTITY_TAKEN");
+    }
+  }
 
   return prisma.$transaction(async (tx) => {
     await tx.user.update({

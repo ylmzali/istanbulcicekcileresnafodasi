@@ -63,11 +63,8 @@ export const duesPeriodCreateSchema = z.object({
 
 export const duesPeriodUpdateSchema = duesPeriodCreateSchema;
 
+/** Full-period settlement only — no partial amount input. */
 export const collectPaymentSchema = z.object({
-  amount: z.string().trim().refine((value) => {
-    const parsed = parseMoneyNumber(value);
-    return parsed != null && parsed > 0;
-  }, "Geçerli bir tutar girin."),
   method: paymentMethodSchema.default("bank_transfer"),
   providerReference: z.string().trim().max(190).optional().nullable(),
   note: z.string().trim().max(500).optional().nullable(),
@@ -548,10 +545,6 @@ export async function collectMemberDuePayment(
   createdById: string,
 ) {
   const input = collectPaymentSchema.parse(raw);
-  const amount = parseMoneyInput(input.amount);
-  if (amount.lessThanOrEqualTo(0)) {
-    throw new Error("INVALID_AMOUNT");
-  }
 
   return prisma.$transaction(async (tx) => {
     const due = await tx.memberDue.findUnique({
@@ -561,9 +554,9 @@ export async function collectMemberDuePayment(
     if (!due) throw new Error("NOT_FOUND");
     if (due.status === "waived") throw new Error("DUE_WAIVED");
 
-    const remaining = remainingDueAmount(due);
-    if (remaining.lessThanOrEqualTo(0)) throw new Error("ALREADY_PAID");
-    if (amount.greaterThan(remaining)) throw new Error("AMOUNT_EXCEEDS");
+    // One settlement per open due: always the full remaining balance.
+    const amount = remainingDueAmount(due);
+    if (amount.lessThanOrEqualTo(0)) throw new Error("ALREADY_PAID");
 
     const paidAt = input.paidAt?.trim()
       ? new Date(input.paidAt)

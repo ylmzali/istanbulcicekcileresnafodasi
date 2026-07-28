@@ -90,7 +90,7 @@ export default async function AdminDueDetailPage({ params }: PageProps) {
           canUnwaive={canUnwaive}
           labels={{
             collect: a.duesCollect,
-            amount: a.duesPeriodAmount,
+            collectHint: a.duesCollectHint,
             method: a.duesMethod,
             methods: a.duesMethods,
             providerReference: a.duesProviderReference,

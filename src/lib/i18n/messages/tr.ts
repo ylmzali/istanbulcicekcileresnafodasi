@@ -574,7 +574,9 @@ export const tr = {
     duesAssessed: "Tahakkuk",
     duesPaid: "Ödenen",
     duesRemaining: "Kalan",
-    duesCollect: "Tahsilat kaydet",
+    duesCollect: "Tahsil edildi",
+    duesCollectHint:
+      "Bu dönem için kalan tutarın tamamı tahsil edilir. Parça ödeme yoktur; biriken dönemler tek tek işaretlenir.",
     duesWaive: "Muafiyet uygula",
     duesWaiveConfirmTitle: "Muafiyet uygulansın mı?",
     duesWaiveConfirmMessage:

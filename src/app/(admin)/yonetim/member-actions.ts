@@ -16,7 +16,40 @@ import {
 
 export type ActionState = {
   error?: string;
+  errorDetails?: string[];
   success?: boolean;
+};
+
+const MEMBER_FIELD_LABELS: Record<string, string> = {
+  memberNo: "Üye no",
+  firstName: "Ad",
+  lastName: "Soyad",
+  identityNo: "T.C. kimlik no",
+  email: "E-posta",
+  phone: "Telefon",
+  password: "Şifre",
+  newPassword: "Yeni şifre",
+  status: "Durum",
+  districtId: "İlçe",
+  cityId: "İl",
+  countryCode: "Ülke",
+  addressLine1: "Adres",
+  addressLine2: "Adres satırı 2",
+  postalCode: "Posta kodu",
+  legalName: "Ünvan / işletme adı",
+  tradeName: "Tabela adı",
+  taxOffice: "Vergi dairesi",
+  taxNo: "Vergi no",
+  businessPhone: "İşletme telefonu",
+  businessEmail: "İşletme e-postası",
+  website: "Web sitesi",
+  address: "İşletme adresi",
+  collectionRef: "Tahsilat ID",
+  registrationDate: "Kayıt tarihi",
+  terminationDate: "Ayrılış tarihi",
+  verificationStatus: "Doğrulama durumu",
+  directoryConsent: "Rehber izni",
+  directoryVisible: "Rehberde görünür",
 };
 
 function boolFromForm(value: FormDataEntryValue | null) {
@@ -43,37 +76,122 @@ function rethrowRedirect(error: unknown) {
   }
 }
 
-function memberErrorMessage(error: unknown, fallback: string) {
-  if (error instanceof ZodError) {
-    return error.issues[0]?.message ?? fallback;
+function isZodError(error: unknown): error is ZodError {
+  return (
+    error instanceof ZodError ||
+    (typeof error === "object" &&
+      error !== null &&
+      "name" in error &&
+      (error as { name?: string }).name === "ZodError" &&
+      "issues" in error &&
+      Array.isArray((error as { issues?: unknown }).issues))
+  );
+}
+
+function formatZodDetails(error: ZodError): string[] {
+  const seen = new Set<string>();
+  const details: string[] = [];
+
+  for (const issue of error.issues) {
+    const key = issue.path[0];
+    const label =
+      typeof key === "string" ? (MEMBER_FIELD_LABELS[key] ?? key) : null;
+    const detail = label ? `${label}: ${issue.message}` : issue.message;
+    if (seen.has(detail)) continue;
+    seen.add(detail);
+    details.push(detail);
+    if (details.length >= 8) break;
   }
-  if (!(error instanceof Error)) return fallback;
-  if (error.message === "MEMBER_NO_TAKEN") {
-    return "Bu üye numarası zaten kullanılıyor.";
+
+  return details;
+}
+
+function prismaUniqueTarget(error: Error): string[] {
+  const meta = (error as { meta?: { target?: unknown } }).meta;
+  if (!meta?.target) return [];
+  if (Array.isArray(meta.target)) {
+    return meta.target.map(String);
   }
-  if (error.message === "EMAIL_TAKEN") {
-    return "Bu e-posta adresi zaten kayıtlı.";
+  return [String(meta.target)];
+}
+
+function formatMemberActionError(
+  error: unknown,
+  fallback: string,
+): { error: string; errorDetails?: string[] } {
+  if (isZodError(error)) {
+    const details = formatZodDetails(error);
+    if (details.length === 1) {
+      return { error: details[0]! };
+    }
+    if (details.length > 1) {
+      return {
+        error: "Bazı alanları kontrol edin.",
+        errorDetails: details,
+      };
+    }
+    return { error: fallback };
   }
-  if (error.message === "NOT_FOUND") {
-    return "Üye bulunamadı.";
+
+  if (!(error instanceof Error)) {
+    return { error: fallback };
   }
-  if (
-    error.message === "DISTRICT_NOT_FOUND" ||
-    error.message === "CITY_NOT_FOUND" ||
-    error.message === "DISTRICT_CITY_MISMATCH"
-  ) {
-    return "İl / ilçe seçimi geçersiz.";
+
+  switch (error.message) {
+    case "MEMBER_NO_TAKEN":
+      return { error: "Bu üye numarası zaten kullanılıyor." };
+    case "EMAIL_TAKEN":
+      return { error: "Bu e-posta adresi zaten kayıtlı." };
+    case "IDENTITY_TAKEN":
+      return { error: "Bu T.C. kimlik numarası ile kayıtlı bir üye var." };
+    case "NOT_FOUND":
+      return { error: "Üye bulunamadı." };
+    case "DISTRICT_NOT_FOUND":
+      return { error: "Seçilen ilçe bulunamadı. İl / ilçe seçimini yenileyin." };
+    case "CITY_NOT_FOUND":
+      return { error: "Seçilen il bulunamadı. İl seçimini yenileyin." };
+    case "DISTRICT_CITY_MISMATCH":
+      return { error: "Seçilen ilçe, seçilen ile ait değil." };
+    default:
+      break;
   }
+
+  const code = (error as { code?: string }).code;
+  if (code === "P2002") {
+    const target = prismaUniqueTarget(error).join(" ").toLowerCase();
+    if (target.includes("identity")) {
+      return { error: "Bu T.C. kimlik numarası ile kayıtlı bir üye var." };
+    }
+    if (target.includes("email")) {
+      return { error: "Bu e-posta adresi zaten kayıtlı." };
+    }
+    if (target.includes("member_no") || target.includes("memberno")) {
+      return { error: "Bu üye numarası zaten kullanılıyor." };
+    }
+    return { error: "Bu bilgilerle kayıtlı başka bir üye var." };
+  }
+
   if (
     error.message.includes("Unknown argument") ||
     error.name === "PrismaClientValidationError"
   ) {
-    return "Veritabanı şeması güncel değil. Lütfen sayfayı yenileyip tekrar deneyin.";
+    return {
+      error:
+        "Veritabanı şeması güncel değil. Lütfen sayfayı yenileyip tekrar deneyin.",
+    };
   }
-  if (error.message.includes("FIELD_ENCRYPTION_KEY") || error.message.includes("AUTH_SECRET")) {
-    return "Şifreleme anahtarı yapılandırılmamış. Sistem yöneticisine bildirin.";
+
+  if (
+    error.message.includes("FIELD_ENCRYPTION_KEY") ||
+    error.message.includes("AUTH_SECRET")
+  ) {
+    return {
+      error:
+        "Şifreleme anahtarı yapılandırılmamış. Sistem yöneticisine bildirin.",
+    };
   }
-  return fallback;
+
+  return { error: fallback };
 }
 
 export async function createMemberAction(
@@ -119,12 +237,10 @@ export async function createMemberAction(
     redirect(routes.admin.memberEdit(created.id));
   } catch (error) {
     rethrowRedirect(error);
-    return {
-      error: memberErrorMessage(
-        error,
-        "Üye oluşturulamadı. Alanları kontrol edin.",
-      ),
-    };
+    return formatMemberActionError(
+      error,
+      "Üye oluşturulamadı. Alanları kontrol edin.",
+    );
   }
 }
 
@@ -178,12 +294,10 @@ export async function saveMemberAction(
     revalidatePath(routes.home);
     return { success: true };
   } catch (error) {
-    return {
-      error: memberErrorMessage(
-        error,
-        "Üye kaydedilemedi. Alanları kontrol edin.",
-      ),
-    };
+    return formatMemberActionError(
+      error,
+      "Üye kaydedilemedi. Alanları kontrol edin.",
+    );
   }
 }
 

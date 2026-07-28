@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 
 type Labels = {
   collect: string;
-  amount: string;
+  collectHint: string;
   method: string;
   methods: Record<string, string>;
   providerReference: string;
@@ -88,6 +88,11 @@ export function DuesCollectForm({
             {remainingLabel}
           </span>
         </p>
+        {canCollect ? (
+          <p className="text-sm text-[var(--color-text-muted)]">
+            {labels.collectHint}
+          </p>
+        ) : null}
         {canUnwaive ? (
           <p className="text-sm text-[var(--color-text-muted)]">
             {labels.waivedNote}
@@ -97,14 +102,6 @@ export function DuesCollectForm({
         {canCollect ? (
           <form action={formAction} className="space-y-4">
             <div className="flex flex-wrap gap-3">
-              <Field label={labels.amount} htmlFor="amount" size="md" required>
-                <TextInput
-                  format="money"
-                  id="amount"
-                  name="amount"
-                  required
-                />
-              </Field>
               <Field label={labels.method} htmlFor="method" size="md">
                 <TextSelect
                   id="method"
